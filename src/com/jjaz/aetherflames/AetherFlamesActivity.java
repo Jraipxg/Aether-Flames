@@ -1,14 +1,17 @@
 package com.jjaz.aetherflames;
 
+import org.andengine.engine.Engine.EngineLock;
 import org.andengine.engine.camera.Camera;
 import org.andengine.engine.camera.hud.controls.AnalogOnScreenControl;
 import org.andengine.engine.camera.hud.controls.DigitalOnScreenControl;
 import org.andengine.engine.camera.hud.controls.AnalogOnScreenControl.IAnalogOnScreenControlListener;
 import org.andengine.engine.camera.hud.controls.BaseOnScreenControl.IOnScreenControlListener;
 import org.andengine.engine.camera.hud.controls.BaseOnScreenControl;
+import org.andengine.engine.handler.IUpdateHandler;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
+import org.andengine.entity.IEntity;
 import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
@@ -19,6 +22,7 @@ import org.andengine.entity.sprite.TiledSprite;
 import org.andengine.entity.util.FPSLogger;
 import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
+import org.andengine.extension.physics.box2d.PhysicsConnectorManager;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.extension.physics.box2d.PhysicsWorld;
 import org.andengine.extension.physics.box2d.util.Vector2Pool;
@@ -38,9 +42,11 @@ import android.widget.Toast;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 
-public class AetherFlamesActivity extends SimpleBaseGameActivity implements OnClickListener 
+public class AetherFlamesActivity extends SimpleBaseGameActivity 
 {
 	// ===========================================================
 	// Constants
@@ -48,9 +54,14 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements OnCl
 
 	private static final int HEALTH_SIZE = 40;
 	private static final int SHIP_SIZE = 40;
+	private static final int BULLET_SIZE = 10;
 
 	private static final int CAMERA_WIDTH = 960;
 	private static final int CAMERA_HEIGHT = 540;
+	
+
+	private static final int SHIP_THRUST = 10;
+	private static final int BULLET_SPEED = 10;
 
 	// ===========================================================
 	// Fields
@@ -67,6 +78,9 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements OnCl
 	private BitmapTextureAtlas mHealthCrateTexture;
 	private ITextureRegion mHealthCrateTextureRegion;
 
+	private BitmapTextureAtlas mBulletTexture;
+	private ITextureRegion mBulletTextureRegion;
+
 	private BitmapTextureAtlas mControlStickTexture;
 	private ITextureRegion mControlStickBaseTextureRegion;
 	private ITextureRegion mControlStickKnobTextureRegion;
@@ -74,15 +88,12 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements OnCl
 	private BitmapTextureAtlas mButtonsTexture;
 	private ITextureRegion mButtonsBaseTextureRegion;
 	private ITextureRegion mButtonsKnobTextureRegion;
-	
-	private BuildableBitmapTextureAtlas mBitmapTextureAtlas;
-	private ITextureRegion mFace1TextureRegion;
-	private ITextureRegion mFace2TextureRegion;
-	private ITextureRegion mFace3TextureRegion;
 
 	private Scene mScene;
 
 	private PhysicsWorld mPhysicsWorld;
+	private CollisionHandler mCollisionHandler;
+	private SceneUpdateHandler mSceneUpdateHandler;
 
 	private Body mShipBody;
 	private TiledSprite mShip;
@@ -100,13 +111,16 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements OnCl
 	// ===========================================================
 	// Methods for/from SuperClass/Interfaces
 	// ===========================================================
-
+	
+	
 	@Override
 	public EngineOptions onCreateEngineOptions()
 	{
 		this.mCamera = new Camera(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT);
+		final EngineOptions engineOptions = new EngineOptions(true, ScreenOrientation.LANDSCAPE_FIXED, new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT), this.mCamera);
+		engineOptions.getTouchOptions().setNeedsMultiTouch(true);
 
-		return new EngineOptions(true, ScreenOrientation.LANDSCAPE_FIXED, new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT), this.mCamera);
+		return engineOptions;
 	}
 
 	@Override
@@ -124,23 +138,21 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements OnCl
 
 		this.mControlStickTexture = new BitmapTextureAtlas(this.getTextureManager(), 256, 128, TextureOptions.BILINEAR);
 		this.mControlStickBaseTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mControlStickTexture, this, "D-Pad.png", 0, 0);
-		this.mControlStickKnobTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mControlStickTexture, this, "onscreen_control_knob.png", 128, 0);
+		this.mControlStickKnobTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mControlStickTexture, this, "Empty.png", 128, 0);
 		this.mControlStickTexture.load();
 		
 		this.mButtonsTexture = new BitmapTextureAtlas(this.getTextureManager(), 256, 128, TextureOptions.BILINEAR);
-		this.mButtonsBaseTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mButtonsTexture, this, "D-Pad.png", 0, 0);
-		this.mButtonsKnobTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mButtonsTexture, this, "onscreen_control_knob.png", 128, 0);
-		this.mControlStickTexture.load();
+		this.mButtonsBaseTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mButtonsTexture, this, "Buttons.png", 0, 0);
+		this.mButtonsKnobTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mButtonsTexture, this, "Empty.png", 128, 0);
+		this.mButtonsTexture.load();
 
 		this.mHealthCrateTexture = new BitmapTextureAtlas(this.getTextureManager(), 128, 128, TextureOptions.BILINEAR);
 		this.mHealthCrateTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mHealthCrateTexture, this, "healthCrate.png", 0, 0);
 		this.mHealthCrateTexture.load();
 		
-
-		this.mBitmapTextureAtlas = new BuildableBitmapTextureAtlas(this.getTextureManager(), 512, 512);
-		this.mFace1TextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "face_box_tiled.png");
-		this.mFace2TextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "face_circle_tiled.png");
-		this.mFace3TextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBitmapTextureAtlas, this, "face_hexagon_tiled.png");
+		this.mBulletTexture = new BitmapTextureAtlas(this.getTextureManager(), 64, 64, TextureOptions.BILINEAR);
+		this.mBulletTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBulletTexture, this, "Bullet.png", 0, 0);
+		this.mBulletTexture.load();
 	}
 
 	@Override
@@ -153,13 +165,18 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements OnCl
 
 		this.mPhysicsWorld = new FixedStepPhysicsWorld(30, new Vector2(0, 0), false, 8, 1);
 
+		this.mCollisionHandler = new CollisionHandler(this.mPhysicsWorld, this.mScene, this.mEngine);
+		this.mSceneUpdateHandler = new SceneUpdateHandler(this.mPhysicsWorld, this.mScene, this.mEngine);
+		this.mPhysicsWorld.setContactListener(mCollisionHandler);
+		
 		this.initSpace();
 		this.initBorders();
 		this.initShip();
 		this.initObstacles();
 		this.initOnScreenControls();
 
-		this.mScene.registerUpdateHandler(this.mPhysicsWorld);
+		//this.mScene.registerUpdateHandler(this.mPhysicsWorld);
+		this.mScene.registerUpdateHandler(this.mSceneUpdateHandler);
 
 		return this.mScene;
 	}
@@ -174,75 +191,39 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements OnCl
 	// Methods
 	// ===========================================================
 
-	private void initOnScreenControls()
+	private void addBullet(Vector2 position, Vector2 velocity)
 	{
-		/*final AnalogOnScreenControl analogOnScreenControl = new AnalogOnScreenControl(0, CAMERA_HEIGHT - this.mOnScreenControlBaseTextureRegion.getHeight(), this.mCamera, this.mOnScreenControlBaseTextureRegion, this.mOnScreenControlKnobTextureRegion, 0.1f, this.getVertexBufferObjectManager(),
-				new IAnalogOnScreenControlListener()
-				{
-					@Override
-					public void onControlChange(final BaseOnScreenControl pBaseOnScreenControl, final float pValueX, final float pValueY)
-					{
-						final Body shipBody = AetherFlamesActivity.this.mShipBody;
-						
-						float shipAngle = shipBody.getAngle();
-						float thrustMagnitude = pValueY * 5;
-						float thrustX = (float)(thrustMagnitude*Math.sin(shipAngle));
-						float thrustY = -(float)(thrustMagnitude*Math.cos(shipAngle));
-						final Vector2 force = Vector2Pool.obtain(thrustX, thrustY);//(float)(thrustMagnitude*Math.cos(shipBody.getAngle())
-						final Vector2 point = shipBody.getWorldCenter();
-						if(Math.abs(force.y) > 0.03)
-						{
-							//shipBody.setLinearVelocity(velocity);
-							shipBody.applyForce(force, point);
-						}
-						Vector2Pool.recycle(force);
-						
-						if(pValueX != 0)
-						{
-							shipBody.setAngularVelocity(pValueX);
-							//shipBody.applyTorque(pValueX);
-						}
-						
-						AetherFlamesActivity.this.mShip.setRotation(MathUtils.radToDeg(shipBody.getAngle()));
-					}
-
-					@Override
-					public void onControlClick(final AnalogOnScreenControl pAnalogOnScreenControl)
-					{
-					}
-				});
-		analogOnScreenControl.getControlBase().setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-		analogOnScreenControl.getControlBase().setAlpha(0.5f);
-		analogOnScreenControl.getControlBase().setScaleCenter(0, 128);
-		analogOnScreenControl.getControlBase().setScale(1.3f);
-		analogOnScreenControl.getControlKnob().setScale(1.3f);
-		analogOnScreenControl.refreshControlKnobPosition();
-
-		this.mScene.setChildScene(analogOnScreenControl);*/
 		
+		//final Sprite bullet = new Sprite(pX, pY, BULLET_SIZE, BULLET_SIZE, this.mBulletTextureRegion, this.getVertexBufferObjectManager());
+		final Sprite bullet = new Sprite(-10, -10, BULLET_SIZE, BULLET_SIZE, this.mBulletTextureRegion, this.getVertexBufferObjectManager());
+
+		final FixtureDef bulletFixtureDef = PhysicsFactory.createFixtureDef(0.1f, 0.5f, 0.0f);
+		final Body bulletBody = PhysicsFactory.createBoxBody(this.mPhysicsWorld, bullet, BodyType.DynamicBody, bulletFixtureDef);
+		bulletBody.setTransform(position.x, position.y, 0);
+		bulletBody.setLinearVelocity(velocity);
+		bulletBody.setUserData("bullet");
+		this.mPhysicsWorld.registerPhysicsConnector(new PhysicsConnector(bullet, bulletBody, true, true));
+		
+		this.mScene.attachChild(bullet);
+	}
+	
+	private void initOnScreenControls()
+	{		
 		this.mControlStick = new DigitalOnScreenControl(0, CAMERA_HEIGHT - this.mControlStickBaseTextureRegion.getHeight(), this.mCamera, this.mControlStickBaseTextureRegion, this.mControlStickKnobTextureRegion, 0.1f, this.getVertexBufferObjectManager(), new IOnScreenControlListener() {
 			@Override
 			public void onControlChange(final BaseOnScreenControl pBaseOnScreenControl, final float pValueX, final float pValueY) {
 				final Body shipBody = AetherFlamesActivity.this.mShipBody;
 				
 				float shipAngle = shipBody.getAngle();
-				float thrustMagnitude = pValueY * 5;
+				float thrustMagnitude = Math.signum(pValueY) * SHIP_THRUST;
 				float thrustX = (float)(thrustMagnitude*Math.sin(shipAngle));
 				float thrustY = -(float)(thrustMagnitude*Math.cos(shipAngle));
-				final Vector2 force = Vector2Pool.obtain(thrustX, thrustY);//(float)(thrustMagnitude*Math.cos(shipBody.getAngle())
+				final Vector2 force = Vector2Pool.obtain(thrustX, thrustY);
 				final Vector2 point = shipBody.getWorldCenter();
-				if(Math.abs(force.y) > 0.03)
-				{
-					//shipBody.setLinearVelocity(velocity);
-					shipBody.applyForce(force, point);
-				}
+				shipBody.applyForce(force, point);
 				Vector2Pool.recycle(force);
 				
-				if(pValueX != 0)
-				{
-					shipBody.setAngularVelocity(pValueX);
-					//shipBody.applyTorque(pValueX);
-				}
+				shipBody.setAngularVelocity(pValueX);
 				
 				AetherFlamesActivity.this.mShip.setRotation(MathUtils.radToDeg(shipBody.getAngle()));
 			}
@@ -250,16 +231,40 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements OnCl
 		this.mControlStick.getControlBase().setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 		this.mControlStick.getControlBase().setAlpha(0.5f);
 		this.mControlStick.getControlBase().setScaleCenter(0, 128);
-		this.mControlStick.getControlBase().setScale(1.25f);
-		this.mControlStick.getControlKnob().setScale(1.25f);
+		this.mControlStick.getControlBase().setScale(1.5f);
+		this.mControlStick.getControlKnob().setScale(1.5f);
 		this.mControlStick.refreshControlKnobPosition();
 
 		this.mScene.setChildScene(this.mControlStick);
 		
-		final Sprite face = new ButtonSprite(0, 0, this.mFace1TextureRegion, this.mFace2TextureRegion, this.mFace3TextureRegion, this.getVertexBufferObjectManager(), this);
-		this.mScene.registerTouchArea(face);
-		this.mScene.attachChild(face);
-		this.mScene.setTouchAreaBindingOnActionDownEnabled(true);
+		this.mButtons = new DigitalOnScreenControl(CAMERA_WIDTH - this.mButtonsBaseTextureRegion.getWidth(), CAMERA_HEIGHT - this.mButtonsBaseTextureRegion.getHeight(), this.mCamera, this.mButtonsBaseTextureRegion, this.mButtonsKnobTextureRegion, 0.1f, this.getVertexBufferObjectManager(), new IOnScreenControlListener() {
+			@Override
+			public void onControlChange(final BaseOnScreenControl pBaseOnScreenControl, final float pValueX, final float pValueY) {
+				if(pValueX < 0) //left button
+				{
+					final Body shipBody = AetherFlamesActivity.this.mShipBody;
+					float shipAngle = shipBody.getAngle();
+					
+					Vector2 shipCenter = shipBody.getLocalCenter().cpy();
+					shipCenter.y += 1.25;
+					Vector2 gunPoint = shipBody.getWorldPoint(shipCenter);
+					
+					Vector2 bulletVelocity = shipBody.getLinearVelocity().cpy();
+					bulletVelocity.x += -(float)(BULLET_SPEED*Math.sin(shipAngle));
+					bulletVelocity.y += (float)(BULLET_SPEED*Math.cos(shipAngle));
+
+					addBullet(gunPoint, bulletVelocity);
+				}
+			}
+		});
+		this.mButtons.getControlBase().setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+		this.mButtons.getControlBase().setAlpha(0.5f);
+		this.mButtons.getControlBase().setScaleCenter(128, 128);
+		this.mButtons.getControlBase().setScale(1.5f);
+		this.mButtons.getControlKnob().setScale(1.5f);
+		this.mButtons.refreshControlKnobPosition();
+
+		this.mControlStick.setChildScene(this.mButtons);
 	}
 
 	private void initShip()
@@ -267,9 +272,9 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements OnCl
 		this.mShip = new TiledSprite(20, 20, SHIP_SIZE, SHIP_SIZE, this.mVehiclesTextureRegion, this.getVertexBufferObjectManager());
 		this.mShip.setCurrentTileIndex(0);
 
-		final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.5f);
+		final FixtureDef carFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.0f);
 		this.mShipBody = PhysicsFactory.createCircleBody(this.mPhysicsWorld, this.mShip, BodyType.DynamicBody, carFixtureDef);
-		this.mShipBody.getFixtureList().get(0).setFriction(0);
+		//this.mShipBody.getFixtureList().get(0).setFriction(0);
 
 		this.mPhysicsWorld.registerPhysicsConnector(new PhysicsConnector(this.mShip, this.mShipBody, true, false));
 
@@ -323,18 +328,6 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements OnCl
 		this.mScene.attachChild(topOuter);
 		this.mScene.attachChild(leftOuter);
 		this.mScene.attachChild(rightOuter);*/
-	}
-
-	@Override
-	public void onClick(ButtonSprite pButtonSprite, float pTouchAreaLocalX, float pTouchAreaLocalY)
-	{
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				Toast.makeText(AetherFlamesActivity.this, "Clicked", Toast.LENGTH_LONG).show();
-			}
-		});
-		
 	}
 
 	// ===========================================================
