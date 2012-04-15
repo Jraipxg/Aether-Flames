@@ -133,10 +133,10 @@ public class Ship
 		}
 	}
 	
-	public void fireThrusters(float direction)
+	public void fireThrusters(float magnitude)
 	{
 		float shipAngle = body.getAngle();
-		float thrustMagnitude = Math.signum(direction) * thrust;
+		float thrustMagnitude = Math.signum(magnitude) * thrust; //used Math.signum previously
 		float thrustX = (float)(thrustMagnitude*Math.sin(shipAngle));
 		float thrustY = -(float)(thrustMagnitude*Math.cos(shipAngle));
 		Vector2 force = Vector2Pool.obtain(thrustX, thrustY);
@@ -145,12 +145,23 @@ public class Ship
 		Vector2Pool.recycle(force);
 	}
 	
+	public void turnInstantAndThrust(Vector2 direction)
+	{
+		body.setTransform(body.getWorldCenter(), (float) Math.atan2(-direction.x, direction.y));
+		sprite.setRotation(MathUtils.radToDeg(body.getAngle()));
+		
+		Vector2 force = direction;
+		force.x *= thrust;
+		force.y *= thrust;
+		Vector2 point = body.getWorldCenter();
+		body.applyForce(force, point);
+	}
+	
 	public void turn(float direction)
 	{
 		body.setAngularVelocity(Math.signum(direction));
 		sprite.setRotation(MathUtils.radToDeg(body.getAngle()));
 	}
-
 	Vector2 barrelPosition()
 	{
 		Vector2 shipCenter = body.getLocalCenter().cpy();

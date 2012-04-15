@@ -96,7 +96,7 @@ public class ClientGameManager implements AetherFlamesConstants {
 		Vector2 center = myShip.getWorldCenter();
 		
 		// queue the new message
-		message.setUpdateMessage(this.myID, this.shipHealths.get(myID), angle, omega, force.x, force.y, center.x, center.y);
+		//message.setUpdateMessage(this.myID, this.shipHealths.get(myID), angle, omega, force.x, force.y, center.x, center.y);
 		this.updateQueue.add(message);
 	}
 	
@@ -114,7 +114,7 @@ public class ClientGameManager implements AetherFlamesConstants {
 		Vector2 center = myShip.getWorldCenter();
 		
 		// queue the new message
-		message.setUpdateMessage(this.myID, this.shipHealths.get(myID), angle, omega, 0, 0, center.x, center.y);
+		//message.setUpdateMessage(this.myID, this.shipHealths.get(myID), angle, omega, 0, 0, center.x, center.y);
 		this.updateQueue.add(message);
 	}
 	
@@ -152,7 +152,7 @@ public class ClientGameManager implements AetherFlamesConstants {
 		
 		// get the message parameters
 		float angle = message.mOrientation;
-		float omega = message.mAngularVelocity;
+		//float omega = message.mAngularVelocity;
 		Vector2 force = new Vector2(message.mVectorX, message.mVectorY);
 		Vector2 point = new Vector2(message.mPosX, message.mPosY);
 		
@@ -163,7 +163,7 @@ public class ClientGameManager implements AetherFlamesConstants {
 		
 		// apply the updates
 		shipBody.applyForce(force, myCenter);
-		shipBody.setAngularVelocity(omega);
+		//shipBody.setAngularVelocity(omega);
 	}
 	
 	/**

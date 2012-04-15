@@ -6,7 +6,7 @@ public class PlasmaBlaster extends ProjectileWeapon
 	{
 		COST = 50;
 		COOLDOWN = 125;//in ms
-		DAMAGE = 10; 
+		DAMAGE = 100; 
 		BLAST_RADIUS = 0.001f;//in m
 		LAUNCH_VELOCITY = 10;
 		
