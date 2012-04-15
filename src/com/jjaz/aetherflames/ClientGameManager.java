@@ -28,7 +28,7 @@ public class ClientGameManager implements AetherFlamesConstants {
 
 	// Update queue
 	private ArrayList<ClientMessage> updateQueue;
-	
+
 	// Game Data
 	private DistributedFixedStepPhysicsWorld physicsWorld;
 	private ArrayList<Body> ships;
@@ -37,11 +37,11 @@ public class ClientGameManager implements AetherFlamesConstants {
 	private int nextBulletID;
 	private int myID;
 	private int frameCount;
-	
+
 	// Networking variables
 	private ServerConnector<SocketConnection> serverConnector;
 	private MessagePool<IMessage> messagePool;
-	
+
 	// Constructors
 	/**
 	 * Default constructor
@@ -54,7 +54,7 @@ public class ClientGameManager implements AetherFlamesConstants {
 		this.nextBulletID = myID * 1000000;
 		this.frameCount = 0;
 	}
-	
+
 	/**
 	 * Constructor
 	 * 
@@ -70,7 +70,7 @@ public class ClientGameManager implements AetherFlamesConstants {
 		this.serverConnector = connector;
 		this.messagePool = pool;
 	}
-	
+
 	// Methods
 	/**
 	 * Creates a new set of players
@@ -78,9 +78,9 @@ public class ClientGameManager implements AetherFlamesConstants {
 	 * @param numPlayers NUmber of players in the game
 	 */
 	public void startGame(int numPlayers) {
-		
+
 	}
-	
+
 	/**
 	 * Queues a force application message for the local player's ship
 	 * 
@@ -89,17 +89,17 @@ public class ClientGameManager implements AetherFlamesConstants {
 	public synchronized void applyForce(Vector2 force) {
 		ShipUpdateClientMessage message = (ShipUpdateClientMessage)this.messagePool.obtainMessage(FLAG_MESSAGE_CLIENT_SHIP_UPDATE);
 		Body myShip = this.ships.get(myID);
-		
+
 		// get the current state of the ship
 		float angle = myShip.getAngle();
 		float omega = myShip.getAngularVelocity();
 		Vector2 center = myShip.getWorldCenter();
-		
+
 		// queue the new message
-		//message.setUpdateMessage(this.myID, this.shipHealths.get(myID), angle, omega, force.x, force.y, center.x, center.y);
+		message.setUpdateMessage(this.myID, this.shipHealths.get(myID), angle, omega, force.x, force.y, center.x, center.y);
 		this.updateQueue.add(message);
 	}
-	
+
 	/**
 	 * Queues a change-of-angular-velocity message for the local player's ship
 	 * 
@@ -108,16 +108,16 @@ public class ClientGameManager implements AetherFlamesConstants {
 	public synchronized void setAngularVelocity(float omega) {
 		ShipUpdateClientMessage message = (ShipUpdateClientMessage)this.messagePool.obtainMessage(FLAG_MESSAGE_CLIENT_SHIP_UPDATE);
 		Body myShip = this.ships.get(myID);
-		
+
 		// get the current state of the ship
 		float angle = myShip.getAngle();
 		Vector2 center = myShip.getWorldCenter();
-		
+
 		// queue the new message
-		//message.setUpdateMessage(this.myID, this.shipHealths.get(myID), angle, omega, 0, 0, center.x, center.y);
+		message.setUpdateMessage(this.myID, this.shipHealths.get(myID), angle, omega, 0, 0, center.x, center.y);
 		this.updateQueue.add(message);
 	}
-	
+
 	/**
 	 * Queues a create bullet message
 	 * 
@@ -125,7 +125,7 @@ public class ClientGameManager implements AetherFlamesConstants {
 	 * @param center The starting coordinate of the bullet
 	 */
 	public synchronized void createNewBullet(Vector2 velocity, Vector2 center){}
-	
+
 	/**
 	 * Sends all updates since the last frame to the game server
 	 */
@@ -140,7 +140,7 @@ public class ClientGameManager implements AetherFlamesConstants {
 			Debug.e(e);
 		}
 	}
-	
+
 	/**
 	 * Handles a ship update message from the server
 	 * 
@@ -149,23 +149,23 @@ public class ClientGameManager implements AetherFlamesConstants {
 	public void handleShipUpdateMessage(ShipUpdateServerMessage message) {
 		int id = message.mShipID;
 		Body shipBody = this.ships.get(id);
-		
+
 		// get the message parameters
 		float angle = message.mOrientation;
-		//float omega = message.mAngularVelocity;
+		float omega = message.mAngularVelocity;
 		Vector2 force = new Vector2(message.mVectorX, message.mVectorY);
 		Vector2 point = new Vector2(message.mPosX, message.mPosY);
-		
+
 		Vector2 myCenter = shipBody.getWorldCenter();
 		//if (point.x != myCenter.x && point.y != myCenter.y) {
 		//	shipBody.
 		//}
-		
+
 		// apply the updates
 		shipBody.applyForce(force, myCenter);
-		//shipBody.setAngularVelocity(omega);
+		shipBody.setAngularVelocity(omega);
 	}
-	
+
 	/**
 	 * Handles a new bullet message from the server
 	 * 
@@ -174,10 +174,10 @@ public class ClientGameManager implements AetherFlamesConstants {
 	public void handleNewBulletMessage(NewBulletServerMessage message) {
 		int id = message.mShipID;
 		Body shipBody = this.ships.get(id);
-		
+
 		// CREATE BULLET AND PUT IN LIST
 	}
-	
+
 	/**
 	 * Handles a new collision message from the server
 	 * 
@@ -186,19 +186,19 @@ public class ClientGameManager implements AetherFlamesConstants {
 	public void handleCollisionMessage(CollisionServerMessage message) {
 		int shipID = message.mShipID;
 		int bulletID = message.mBulletID;
-		
+
 		int newHealth = this.shipHealths.get(shipID) - 10;
 		this.shipHealths.set(shipID, newHealth);
-		
+
 		// destroy the ship if its dead
 		if (newHealth <= 0) {
 			this.physicsWorld.destroyBody(this.ships.get(shipID));
 		}
-		
+
 		// remove the bullet from the world
 		this.physicsWorld.destroyBody(this.bullets.get(bulletID));
 	}
-	
+
 	/**
 	 * Makes all changes from the previous frame and sets up the next frame
 	 */
@@ -206,35 +206,34 @@ public class ClientGameManager implements AetherFlamesConstants {
 		this.physicsWorld.step();
 		this.frameCount++;
 	}
-	
+
 	// Setters
 	public void setPhysicsWorld(DistributedFixedStepPhysicsWorld w) {
 		this.physicsWorld = w;
 	}
-	
+
 	public void setID(int id) {
 		this.myID = id;
 	}
-	
+
 	public void setServerConnector(ServerConnector<SocketConnection> connector) {
 		this.serverConnector = connector;
 	}
-	
+
 	public void setMessagePool(MessagePool<IMessage> pool) {
 		this.messagePool = pool;
 	}
-	
+
 	// Getters
 	public DistributedFixedStepPhysicsWorld gePhysicsWorld() {
 		return this.physicsWorld;
 	}
-	
+
 	public int getID() {
 		return this.myID;
 	}
-	
+
 	public int getFrameCount() {
 		return this.frameCount;
 	}
 }
- 
