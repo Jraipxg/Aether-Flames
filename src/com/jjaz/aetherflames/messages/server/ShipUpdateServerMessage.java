@@ -13,6 +13,7 @@ public class ShipUpdateServerMessage extends ServerMessage implements AetherFlam
 	public int mShipID;
 	public int mHealth;
 	public float mOrientation;
+	public float mAngularVelocity;
 	public float mVectorX, mVectorY;
 	public float mPosX, mPosY;
 	
@@ -35,12 +36,13 @@ public class ShipUpdateServerMessage extends ServerMessage implements AetherFlam
 	 * @param posY Ship initial position y component.
 	 */
 	public ShipUpdateServerMessage(final int sID, final int health,
-								   final float orientation,
+								   final float orientation, final float omega,
 								   final float vecX, final float vecY,
 								   final float posX, final float posY) {
 		this.mShipID = sID;
 		this.mHealth = health;
 		this.mOrientation = orientation;
+		this.mAngularVelocity = omega;
 		this.mVectorX = vecX;
 		this.mVectorY = vecY;
 		this.mPosX = posX;
@@ -58,13 +60,14 @@ public class ShipUpdateServerMessage extends ServerMessage implements AetherFlam
 	 * @param posX Ship initial position x component.
 	 * @param posY Ship initial position y component.
 	 */	
-	public void setNewBullet(final int sID, final int health,
-			   				 final float orientation,
-			   				 final float vecX, final float vecY,
-			   				 final float posX, final float posY) {
+	public void setUpdateMessage(final int sID, final int health,
+			   				 	final float orientation, final float omega,
+			   				 	final float vecX, final float vecY,
+			   				 	final float posX, final float posY) {
 		this.mShipID = sID;
 		this.mHealth = health;
 		this.mOrientation = orientation;
+		this.mAngularVelocity = omega;
 		this.mVectorX = vecX;
 		this.mVectorY = vecY;
 		this.mPosX = posX;
@@ -81,6 +84,7 @@ public class ShipUpdateServerMessage extends ServerMessage implements AetherFlam
 		this.mShipID = pDataInputStream.readInt();
 		this.mHealth = pDataInputStream.readInt();
 		this.mOrientation = pDataInputStream.readFloat();
+		this.mAngularVelocity = pDataInputStream.readFloat();
 		this.mVectorX = pDataInputStream.readFloat();
 		this.mVectorY = pDataInputStream.readFloat();
 		this.mPosX = pDataInputStream.readFloat();
@@ -92,6 +96,7 @@ public class ShipUpdateServerMessage extends ServerMessage implements AetherFlam
 		pDataOutputStream.writeInt(this.mShipID);
 		pDataOutputStream.writeInt(this.mHealth);
 		pDataOutputStream.writeFloat(this.mOrientation);
+		pDataOutputStream.writeFloat(this.mAngularVelocity);
 		pDataOutputStream.writeFloat(this.mVectorX);
 		pDataOutputStream.writeFloat(this.mVectorY);
 		pDataOutputStream.writeFloat(this.mPosX);
