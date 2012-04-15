@@ -1,61 +1,80 @@
 package com.jjaz.aetherflames;
 
-import org.andengine.engine.Engine;
+import java.util.Map;
 import org.andengine.engine.handler.IUpdateHandler;
 import org.andengine.entity.IEntity;
-import org.andengine.entity.scene.Scene;
+import org.andengine.entity.text.Text;
+import org.andengine.entity.text.TextOptions;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsConnectorManager;
-import org.andengine.extension.physics.box2d.PhysicsWorld;
+import org.andengine.util.HorizontalAlign;
+
+import android.widget.Toast;
 
 import com.badlogic.gdx.physics.box2d.Body;
 
 public class SceneUpdateHandler implements IUpdateHandler
 {
-	private PhysicsWorld mPhysicsWorld;
-	private Scene mScene;
-	private Engine mEngine;
-	
-	public SceneUpdateHandler(PhysicsWorld world, Scene scene, Engine engine)
+	public SceneUpdateHandler()
 	{
-		mPhysicsWorld = world;
-		mScene = scene;
-		mEngine = engine;
+	}
+	
+	boolean deleted(PhysicsConnector pc)
+	{
+		Body body = pc.getBody();
+		if(body == null)
+		{
+			return false;
+		}
+		Object userData = body.getUserData();
+		if(userData == null)
+		{
+			return false;
+		}
+		if(userData.equals("delete"))
+		{
+			IEntity shape = pc.getShape();
+
+			AetherFlamesActivity.mPhysicsWorld.unregisterPhysicsConnector(pc);
+			AetherFlamesActivity.mPhysicsWorld.destroyBody(body);
+			AetherFlamesActivity.mScene.detachChild(shape);
+			
+			return true;
+		}
+		return false;
 	}
 	
 	@Override
 	public void onUpdate(float pSecondsElapsed)
 	{
-		this.mPhysicsWorld.onUpdate(pSecondsElapsed);
-		PhysicsConnectorManager pcm = this.mPhysicsWorld.getPhysicsConnectorManager();
+		AetherFlamesActivity.mPhysicsWorld.onUpdate(pSecondsElapsed);
+		PhysicsConnectorManager pcm = AetherFlamesActivity.mPhysicsWorld.getPhysicsConnectorManager();
 		for(int i = 0; i < pcm.size(); i++)
 		{
-			Body body = pcm.get(i).getBody();
-			if(body == null)
+			PhysicsConnector pc = pcm.get(i);
+			if(deleted(pc))
 			{
 				continue;
 			}
-			Object userData = body.getUserData();
-			if(userData == null)
-			{
-				continue;
-			}
-			if(userData.equals("delete"))
-			{
-				//final EngineLock engineLock = AetherFlamesActivity.this.mEngine.getEngineLock();
-				//engineLock.lock();
-				PhysicsConnector bulletPhysicsConnector = pcm.get(i);
-				IEntity shape = bulletPhysicsConnector.getShape();
-
-				this.mPhysicsWorld.unregisterPhysicsConnector(bulletPhysicsConnector);
-				this.mPhysicsWorld.destroyBody(body);
-
-				//this.mScene.unregisterTouchArea(BodyA);
-				this.mScene.detachChild(shape);
-				
-				//System.gc();
-				//engineLock.unlock();
-			}
+		}
+		
+		for (Map.Entry<Integer,Ship> shipEntry : AetherFlamesActivity.ships.entrySet()) 
+		{
+			Ship ship = shipEntry.getValue();
+			ship.updateStatusBars();
+			ship.regen();
+		}
+		
+		if(AetherFlamesActivity.ships.size() == 1)
+		{
+			Ship winner = AetherFlamesActivity.ships.entrySet().iterator().next().getValue();
+			final Text winText = new Text(AetherFlamesActivity.CAMERA_WIDTH/2, AetherFlamesActivity.CAMERA_HEIGHT/2, AetherFlamesActivity.mFont, "Player " + winner.id + " wins!", new TextOptions(HorizontalAlign.CENTER), AetherFlamesActivity.mVertexBufferObjectManager);
+			float textHeight = winText.getHeight();
+			float textWidth = winText.getWidth();
+			winText.setY(AetherFlamesActivity.CAMERA_HEIGHT/2 - textHeight/2);
+			winText.setX(AetherFlamesActivity.CAMERA_WIDTH/2 - textWidth/2);
+			AetherFlamesActivity.mScene.attachChild(winText);
+			AetherFlamesActivity.mGameEngine.stop();
 		}
 	}
 
