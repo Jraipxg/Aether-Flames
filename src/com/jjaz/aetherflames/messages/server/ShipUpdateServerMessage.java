@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import org.andengine.extension.multiplayer.protocol.adt.message.server.ServerMessage;
 
-import com.jjaz.aetherflames.messages.AetherFlamesConstants;
+import com.jjaz.aetherflames.AetherFlamesConstants;
 
 public class ShipUpdateServerMessage extends ServerMessage implements AetherFlamesConstants {
 	
@@ -60,7 +60,7 @@ public class ShipUpdateServerMessage extends ServerMessage implements AetherFlam
 	 * @param posX Ship initial position x component.
 	 * @param posY Ship initial position y component.
 	 */	
-	public void setUpdateMessage(final int sID, final int health,
+	public void setShipUpdate(final int sID, final int health,
 			   				 	final float orientation, final float omega,
 			   				 	final float vecX, final float vecY,
 			   				 	final float posX, final float posY) {

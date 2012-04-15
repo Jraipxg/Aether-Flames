@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import org.andengine.extension.multiplayer.protocol.adt.message.server.ServerMessage;
 
-import com.jjaz.aetherflames.messages.AetherFlamesConstants;
+import com.jjaz.aetherflames.AetherFlamesConstants;
 
 public class GameEndServerMessage extends ServerMessage implements AetherFlamesConstants {
 

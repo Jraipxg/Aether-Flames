@@ -8,48 +8,49 @@ import org.andengine.extension.multiplayer.protocol.adt.message.server.ServerMes
 
 import com.jjaz.aetherflames.AetherFlamesConstants;
 
-public class GameStartServerMessage extends ServerMessage implements AetherFlamesConstants {
-
-	public boolean mStart;
+public class DoneServerMessage extends ServerMessage implements AetherFlamesConstants {
+	
+	public boolean mDone;
 	
 	/**
 	 * C'tor
 	 */
-	public GameStartServerMessage() {
+	public DoneServerMessage() {
 		// intentionally empty
 	}
 	
 	/**
 	 * C'tor
 	 * 
-	 * @param start True to start game.
+	 * @param done Filler param.
 	 */
-	public GameStartServerMessage(final boolean start) {
-		this.mStart = start;
+	public DoneServerMessage(final boolean done) {
+		this.mDone = done;
 	}
 	
 	/**
 	 * Setter.
 	 * 
-	 * @param start True to start game.
+	 * @param done Filler param.
 	 */	
-	public void setNewBullet(final boolean start) {
-		this.mStart = start;	
+	public void setDone(final boolean done) {
+		this.mDone = done;
 	}
 	
 	@Override
 	public short getFlag() {
-		return FLAG_MESSAGE_SERVER_GAME_START;
+		return FLAG_MESSAGE_SERVER_DONE;
 	}
 
 	@Override
 	protected void onReadTransmissionData(DataInputStream pDataInputStream) throws IOException {
-		this.mStart = pDataInputStream.readBoolean();
+		this.mDone = pDataInputStream.readBoolean();
 	}
 
 	@Override
 	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream) throws IOException {
-		pDataOutputStream.writeBoolean(this.mStart);
+		pDataOutputStream.writeBoolean(this.mDone);
 	}
+	
 	
 }

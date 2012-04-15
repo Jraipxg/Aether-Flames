@@ -17,7 +17,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 
-import com.jjaz.aetherflames.messages.AetherFlamesConstants;
 import com.jjaz.aetherflames.messages.client.ShipUpdateClientMessage;
 import com.jjaz.aetherflames.messages.server.CollisionServerMessage;
 import com.jjaz.aetherflames.messages.server.NewBulletServerMessage;
@@ -96,7 +95,7 @@ public class ClientGameManager implements AetherFlamesConstants {
 		Vector2 center = myShip.getWorldCenter();
 
 		// queue the new message
-		message.setUpdateMessage(this.myID, this.shipHealths.get(myID), angle, omega, force.x, force.y, center.x, center.y);
+		message.setShipUpdate(this.myID, this.shipHealths.get(myID), angle, omega, force.x, force.y, center.x, center.y);
 		this.updateQueue.add(message);
 	}
 
@@ -114,7 +113,7 @@ public class ClientGameManager implements AetherFlamesConstants {
 		Vector2 center = myShip.getWorldCenter();
 
 		// queue the new message
-		message.setUpdateMessage(this.myID, this.shipHealths.get(myID), angle, omega, 0, 0, center.x, center.y);
+		message.setShipUpdate(this.myID, this.shipHealths.get(myID), angle, omega, 0, 0, center.x, center.y);
 		this.updateQueue.add(message);
 	}
 

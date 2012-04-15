@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import org.andengine.extension.multiplayer.protocol.adt.message.client.ClientMessage;
 
-import com.jjaz.aetherflames.messages.AetherFlamesConstants;
+import com.jjaz.aetherflames.AetherFlamesConstants;
 
 public class NewBulletClientMessage extends ClientMessage implements AetherFlamesConstants {
 

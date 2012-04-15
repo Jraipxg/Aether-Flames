@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import org.andengine.extension.multiplayer.protocol.adt.message.client.ClientMessage;
 
-import com.jjaz.aetherflames.messages.AetherFlamesConstants;
+import com.jjaz.aetherflames.AetherFlamesConstants;
 
 public class CollisionClientMessage extends ClientMessage implements AetherFlamesConstants {
 	
@@ -37,7 +37,7 @@ public class CollisionClientMessage extends ClientMessage implements AetherFlame
 	 * @param sID Ship id.
 	 * @param bID Bullet id.
 	 */	
-	public void setNewBullet(final int sID, final int bID) {
+	public void setCollision(final int sID, final int bID) {
 		this.mShipID = sID;
 		this.mBulletID = bID;		
 	}
