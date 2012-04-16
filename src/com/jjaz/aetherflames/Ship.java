@@ -14,7 +14,7 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 
-public class Ship
+public class Ship implements AetherFlamesConstants
 {
 	protected static final int WHITE_SHIP = 0;
 	protected static final int RED_SHIP = 1;
@@ -158,7 +158,7 @@ public class Ship
 	}
 	
 	public void turn(float direction)
-	{
+	{	
 		body.setAngularVelocity(Math.signum(direction));
 		sprite.setRotation(MathUtils.radToDeg(body.getAngle()));
 	}
@@ -184,7 +184,7 @@ public class Ship
 			weaponCooldownOver = System.currentTimeMillis() + currentWeapon.COOLDOWN;
 		}
 	}
-	
+
 	public void nextWeapon()
 	{
 		//TODO: make and update current weapon picture
@@ -205,6 +205,10 @@ public class Ship
 			currentWeaponIndex = availableWeapons.size() - 1;
 		}
 		currentWeapon = availableWeapons.get(currentWeaponIndex);
+	}
+	
+	public ArrayList<ProjectileWeapon> getAvailableWeapons() {
+		return availableWeapons;
 	}
 
 	public void activateShields()
@@ -241,6 +245,10 @@ public class Ship
 		availableWeapons.add(new PlasmaBlaster());
 		
 		currentWeapon = availableWeapons.get(0);
+	}
+	
+	public int getHealth() {
+		return hp;
 	}
 	
 	public Ship(float x, float y, float angle, int color) //angle in degrees 0 is down, -90 is right, 90 is left

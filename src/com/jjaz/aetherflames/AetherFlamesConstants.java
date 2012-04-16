@@ -2,6 +2,11 @@ package com.jjaz.aetherflames;
 
 public interface AetherFlamesConstants {
 
+	/* Bullet Types */
+	public static final int PLASMA_BLASTER = 0;
+//	public static final int MINE = PLASMA_BLASTER + 1;
+	
+	/* General networking constants */
 	public static final int SERVER_PORT = 4444;
 	public static final short PROTOCOL_VERSION = 1;
 	

@@ -14,5 +14,6 @@ public class PlasmaBlaster extends ProjectileWeapon
 		
 		texture = AetherFlamesActivity.mPlasmaBlastTextureRegion;
 		name = "PlasmaBall";
+		type = PLASMA_BLASTER;
 	}
 }

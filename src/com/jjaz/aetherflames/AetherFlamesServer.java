@@ -89,9 +89,9 @@ public class AetherFlamesServer extends
 			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
 				final NewBulletClientMessage newBulletClientMessage = (NewBulletClientMessage)pClientMessage;
 				final NewBulletServerMessage newBulletServerMessage = new NewBulletServerMessage();
-				newBulletServerMessage.setNewBullet(newBulletClientMessage.mShipID, newBulletClientMessage.mBulletID,
+				newBulletServerMessage.setNewBullet(newBulletClientMessage.mShipID, newBulletClientMessage.mBulletID, newBulletClientMessage.mBulletType,
 													newBulletClientMessage.mVectorX, newBulletClientMessage.mVectorY,
-													newBulletClientMessage.mPosX, newBulletClientMessage.mPosY);
+													newBulletClientMessage.mPosX, newBulletClientMessage.mPosY, newBulletClientMessage.mAngle);
 				messages.addLast(newBulletServerMessage);
 			}
 		});

@@ -2,7 +2,6 @@ package com.jjaz.aetherflames;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.andengine.extension.multiplayer.protocol.adt.message.IMessage;
@@ -10,14 +9,13 @@ import org.andengine.extension.multiplayer.protocol.adt.message.client.ClientMes
 import org.andengine.extension.multiplayer.protocol.client.connector.ServerConnector;
 import org.andengine.extension.multiplayer.protocol.shared.SocketConnection;
 import org.andengine.extension.multiplayer.protocol.util.MessagePool;
-import org.andengine.extension.physics.box2d.PhysicsConnectorManager;
 import org.andengine.util.debug.Debug;
 
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.World;
 
+import com.jjaz.aetherflames.messages.client.DoneClientMessage;
 import com.jjaz.aetherflames.messages.client.ShipUpdateClientMessage;
+import com.jjaz.aetherflames.messages.client.NewBulletClientMessage;
 import com.jjaz.aetherflames.messages.server.CollisionServerMessage;
 import com.jjaz.aetherflames.messages.server.NewBulletServerMessage;
 import com.jjaz.aetherflames.messages.server.ShipUpdateServerMessage;
@@ -25,14 +23,14 @@ import com.jjaz.aetherflames.physics.DistributedFixedStepPhysicsWorld;
 
 public class ClientGameManager implements AetherFlamesConstants {
 
+	public static final float FIELD_EMPTY = -1;
+	
 	// Update queue
 	private ArrayList<ClientMessage> updateQueue;
 
 	// Game Data
 	private DistributedFixedStepPhysicsWorld physicsWorld;
-	private ArrayList<Body> ships;
-	private ArrayList<Integer> shipHealths;
-	private Map<Integer, Body> bullets;
+	private Map<Integer, Ship> ships;
 	private int nextBulletID;
 	private int myID;
 	private int frameCount;
@@ -47,10 +45,7 @@ public class ClientGameManager implements AetherFlamesConstants {
 	 */
 	public ClientGameManager() {
 		this.updateQueue = new ArrayList<ClientMessage>();
-		this.ships = new ArrayList<Body>();
-		this.shipHealths = new ArrayList<Integer>();
-		this.bullets = new HashMap<Integer, Body>();
-		this.nextBulletID = myID * 1000000;
+		this.nextBulletID = myID * 1000000; // makes sure there are enough IDs
 		this.frameCount = 0;
 	}
 
@@ -62,10 +57,11 @@ public class ClientGameManager implements AetherFlamesConstants {
 	 * @param connector Connection to the game server.
 	 * @param pool Message pool
 	 */
-	public ClientGameManager(DistributedFixedStepPhysicsWorld w, int id, ServerConnector<SocketConnection> connector, MessagePool<IMessage> pool) {
+	public ClientGameManager(DistributedFixedStepPhysicsWorld w, int id, Map<Integer, Ship> m, ServerConnector<SocketConnection> connector, MessagePool<IMessage> pool) {
 		this();
 		this.physicsWorld = w;
 		this.myID = id;
+		this.ships = m;
 		this.serverConnector = connector;
 		this.messagePool = pool;
 	}
@@ -85,17 +81,12 @@ public class ClientGameManager implements AetherFlamesConstants {
 	 * 
 	 * @param force The force to be applied
 	 */
-	public synchronized void applyForce(Vector2 force) {
+	public synchronized void queueApplyForceEvent(Vector2 force) {
 		ShipUpdateClientMessage message = (ShipUpdateClientMessage)this.messagePool.obtainMessage(FLAG_MESSAGE_CLIENT_SHIP_UPDATE);
-		Body myShip = this.ships.get(myID);
-
-		// get the current state of the ship
-		float angle = myShip.getAngle();
-		float omega = myShip.getAngularVelocity();
-		Vector2 center = myShip.getWorldCenter();
+		Ship myShip = this.ships.get(myID);
 
 		// queue the new message
-		message.setShipUpdate(this.myID, this.shipHealths.get(myID), angle, omega, force.x, force.y, center.x, center.y);
+		message.setShipUpdate(this.myID, myShip.getHealth(), FIELD_EMPTY, FIELD_EMPTY, force.x, force.y, FIELD_EMPTY, FIELD_EMPTY);
 		this.updateQueue.add(message);
 	}
 
@@ -104,37 +95,54 @@ public class ClientGameManager implements AetherFlamesConstants {
 	 * 
 	 * @param omega The new angular velocity
 	 */
-	public synchronized void setAngularVelocity(float omega) {
+	public synchronized void setAngularVelocity(float angularVelocity) {
 		ShipUpdateClientMessage message = (ShipUpdateClientMessage)this.messagePool.obtainMessage(FLAG_MESSAGE_CLIENT_SHIP_UPDATE);
-		Body myShip = this.ships.get(myID);
-
-		// get the current state of the ship
-		float angle = myShip.getAngle();
-		Vector2 center = myShip.getWorldCenter();
+		Ship myShip = this.ships.get(myID);
 
 		// queue the new message
-		message.setShipUpdate(this.myID, this.shipHealths.get(myID), angle, omega, 0, 0, center.x, center.y);
+		message.setShipUpdate(this.myID, myShip.getHealth(), FIELD_EMPTY, angularVelocity, FIELD_EMPTY, FIELD_EMPTY, FIELD_EMPTY, FIELD_EMPTY);
+		this.updateQueue.add(message);
+	}
+	
+	public synchronized void queueTurnInstantAndThrustEvent(Vector2 direction) {
+		ShipUpdateClientMessage message = (ShipUpdateClientMessage)this.messagePool.obtainMessage(FLAG_MESSAGE_CLIENT_SHIP_UPDATE);
+		Ship myShip = this.ships.get(myID);
+		
+		float angle = (float) Math.atan2(-direction.x, direction.y);
+
+		// queue the new message
+		message.setShipUpdate(this.myID, myShip.getHealth(), angle, FIELD_EMPTY, direction.x, direction.y, FIELD_EMPTY, FIELD_EMPTY);
 		this.updateQueue.add(message);
 	}
 
 	/**
 	 * Queues a create bullet message
 	 * 
+	 * @param name The name of the bullet type
 	 * @param velocity The velocity of the bullet
 	 * @param center The starting coordinate of the bullet
 	 */
-	public synchronized void createNewBullet(Vector2 velocity, Vector2 center){}
+	public synchronized void queueNewBulletEvent(int type, Vector2 velocity, Vector2 center, int angle) {
+		NewBulletClientMessage message = (NewBulletClientMessage)messagePool.obtainMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET);
+		int bulletID = nextBulletID;
+		nextBulletID++;
+		
+		message.setNewBullet(myID, bulletID, type, velocity.x, velocity.y, center.x, center.y, angle);
+		this.updateQueue.add(message);
+	}
 
 	/**
 	 * Sends all updates since the last frame to the game server
 	 */
 	public synchronized void sendUpdates() {
-		// ADD IN CLIENT END GAME MESSAGE
 		try {
 			for (ClientMessage message : this.updateQueue) {
 				this.serverConnector.sendClientMessage(message);
 				this.messagePool.recycleMessage(message);
 			}
+			DoneClientMessage doneMessage = (DoneClientMessage)this.messagePool.obtainMessage(FLAG_MESSAGE_CLIENT_DONE);
+			this.serverConnector.sendClientMessage(doneMessage);
+			this.messagePool.recycleMessage(doneMessage);
 		} catch (IOException e) {
 			Debug.e(e);
 		}
@@ -147,22 +155,24 @@ public class ClientGameManager implements AetherFlamesConstants {
 	 */
 	public void handleShipUpdateMessage(ShipUpdateServerMessage message) {
 		int id = message.mShipID;
-		Body shipBody = this.ships.get(id);
+		Ship ship = this.ships.get(id);
 
 		// get the message parameters
 		float angle = message.mOrientation;
-		float omega = message.mAngularVelocity;
+		float angularVelocity = message.mAngularVelocity;
 		Vector2 force = new Vector2(message.mVectorX, message.mVectorY);
 		Vector2 point = new Vector2(message.mPosX, message.mPosY);
 
-		Vector2 myCenter = shipBody.getWorldCenter();
-		//if (point.x != myCenter.x && point.y != myCenter.y) {
-		//	shipBody.
-		//}
-
-		// apply the updates
-		shipBody.applyForce(force, myCenter);
-		shipBody.setAngularVelocity(omega);
+		if (angularVelocity != FIELD_EMPTY) {
+			ship.turn(angularVelocity);
+		}
+		if (force.x != FIELD_EMPTY && force.y != FIELD_EMPTY) {
+			if (angle == (float)Math.atan2(-force.x, force.y)) {
+				ship.turnInstantAndThrust(force);
+			} else {
+				ship.fireThrusters((float)Math.sqrt(force.x * force.x + force.y * force.y));
+			}
+		} 
 	}
 
 	/**
@@ -172,9 +182,25 @@ public class ClientGameManager implements AetherFlamesConstants {
 	 */
 	public void handleNewBulletMessage(NewBulletServerMessage message) {
 		int id = message.mShipID;
-		Body shipBody = this.ships.get(id);
-
-		// CREATE BULLET AND PUT IN LIST
+		Ship ship = this.ships.get(id);
+		ArrayList<ProjectileWeapon> weapons = ship.getAvailableWeapons();
+		ProjectileWeapon weapon;
+		int type = message.mBulletType;
+		Vector2 center = new Vector2(message.mPosX, message.mPosY);
+		Vector2 velocity = new Vector2(message.mVectorX, message.mVectorY);
+		float angle = message.mAngle;
+		
+		// find the desired weapon
+		int i = 0;
+		while (i < weapons.size() && weapons.get(i).type != type) {
+			i++;
+		}
+		
+		// fire the weapon if it is legitimate
+		if(i < weapons.size()) {
+			weapon = weapons.get(i);
+			weapon.fire(center, velocity, angle);
+		}	
 	}
 
 	/**
@@ -183,7 +209,8 @@ public class ClientGameManager implements AetherFlamesConstants {
 	 * @param message The message to handle
 	 */
 	public void handleCollisionMessage(CollisionServerMessage message) {
-		int shipID = message.mShipID;
+		// TODO: HANDLE THESE MESSAGES IF NECESSARY
+		/*int shipID = message.mShipID;
 		int bulletID = message.mBulletID;
 
 		int newHealth = this.shipHealths.get(shipID) - 10;
@@ -195,7 +222,7 @@ public class ClientGameManager implements AetherFlamesConstants {
 		}
 
 		// remove the bullet from the world
-		this.physicsWorld.destroyBody(this.bullets.get(bulletID));
+		this.physicsWorld.destroyBody(this.bullets.get(bulletID));*/
 	}
 
 	/**

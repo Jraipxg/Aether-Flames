@@ -10,7 +10,7 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 
-public abstract class ProjectileWeapon
+public abstract class ProjectileWeapon implements AetherFlamesConstants
 {
 	protected int COST;
 	protected int COOLDOWN;//in ms
@@ -22,6 +22,7 @@ public abstract class ProjectileWeapon
 	
 	protected ITextureRegion texture;
 	protected String name;
+	protected int type;
 	
 	public void fire(Vector2 position, Vector2 initialVelocity, float angle)
 	{
