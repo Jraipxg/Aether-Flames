@@ -6,6 +6,8 @@ import java.util.Map;
 
 import org.andengine.extension.multiplayer.protocol.adt.message.IMessage;
 import org.andengine.extension.multiplayer.protocol.adt.message.client.ClientMessage;
+import org.andengine.extension.multiplayer.protocol.adt.message.server.IServerMessage;
+import org.andengine.extension.multiplayer.protocol.client.IServerMessageHandler;
 import org.andengine.extension.multiplayer.protocol.client.connector.ServerConnector;
 import org.andengine.extension.multiplayer.protocol.shared.SocketConnection;
 import org.andengine.extension.multiplayer.protocol.util.MessagePool;
@@ -13,10 +15,14 @@ import org.andengine.util.debug.Debug;
 
 import com.badlogic.gdx.math.Vector2;
 
+import com.jjaz.aetherflames.messages.client.CollisionClientMessage;
 import com.jjaz.aetherflames.messages.client.DoneClientMessage;
 import com.jjaz.aetherflames.messages.client.ShipUpdateClientMessage;
 import com.jjaz.aetherflames.messages.client.NewBulletClientMessage;
 import com.jjaz.aetherflames.messages.server.CollisionServerMessage;
+import com.jjaz.aetherflames.messages.server.DoneServerMessage;
+import com.jjaz.aetherflames.messages.server.GameEndServerMessage;
+import com.jjaz.aetherflames.messages.server.GameStartServerMessage;
 import com.jjaz.aetherflames.messages.server.NewBulletServerMessage;
 import com.jjaz.aetherflames.messages.server.ShipUpdateServerMessage;
 import com.jjaz.aetherflames.physics.DistributedFixedStepPhysicsWorld;
@@ -52,8 +58,19 @@ public class ClientGameManager implements AetherFlamesConstants {
 	/**
 	 * Constructor
 	 * 
+	 * @param id This player's game ID.
+	 */
+	public ClientGameManager(int id) {
+		this();
+		this.myID = id;
+	}
+	
+	/**
+	 * Constructor
+	 * 
 	 * @param w The game's distributed physics world.
 	 * @param id This player's game ID.
+	 * @param m A hash table of the ships involved in the game.
 	 * @param connector Connection to the game server.
 	 * @param pool Message pool
 	 */
@@ -64,9 +81,65 @@ public class ClientGameManager implements AetherFlamesConstants {
 		this.ships = m;
 		this.serverConnector = connector;
 		this.messagePool = pool;
+		
+		initMessagePool();
+		registerMessageHandlers();
 	}
 
 	// Methods
+	/**
+	 * Initializes the message pool
+	 */
+	private void initMessagePool() {
+		this.messagePool.registerMessage(FLAG_MESSAGE_CLIENT_CONNECTION_ESTABLISH, ShipUpdateClientMessage.class);
+		this.messagePool.registerMessage(FLAG_MESSAGE_CLIENT_CONNECTION_CLOSE, ShipUpdateClientMessage.class);
+		this.messagePool.registerMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET, NewBulletClientMessage.class);
+		this.messagePool.registerMessage(FLAG_MESSAGE_CLIENT_SHIP_UPDATE, ShipUpdateClientMessage.class);
+		this.messagePool.registerMessage(FLAG_MESSAGE_CLIENT_COLLISION, CollisionClientMessage.class);
+		this.messagePool.registerMessage(FLAG_MESSAGE_CLIENT_DONE, DoneClientMessage.class);
+	}
+	
+	/**
+	 * Registers all gameplay message types to be handled by the designated methods in the ClientGameManager class
+	 */
+	private void registerMessageHandlers() {
+		try {
+			this.serverConnector.registerServerMessage(FLAG_MESSAGE_SERVER_SHIP_UPDATE, ShipUpdateServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+				@Override
+				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+					final ShipUpdateServerMessage shipUpdateMessage = (ShipUpdateServerMessage)pServerMessage;
+					ClientGameManager.this.handleShipUpdateMessage(shipUpdateMessage);
+				}
+			});
+
+			this.serverConnector.registerServerMessage(FLAG_MESSAGE_SERVER_NEW_BULLET, NewBulletServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+				@Override
+				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+					final NewBulletServerMessage newBulletMessage = (NewBulletServerMessage)pServerMessage;
+					ClientGameManager.this.handleNewBulletMessage(newBulletMessage);
+				}
+			});
+			
+			this.serverConnector.registerServerMessage(FLAG_MESSAGE_SERVER_COLLISION, CollisionServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+				@Override
+				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+					final CollisionServerMessage collisionMessage = (CollisionServerMessage)pServerMessage;
+					ClientGameManager.this.handleCollisionMessage(collisionMessage);
+				}
+			});
+			
+			this.serverConnector.registerServerMessage(FLAG_MESSAGE_SERVER_DONE, DoneServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+				@Override
+				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+					ClientGameManager.this.nextFrame();
+				}
+			});
+
+		} catch (final Throwable t) {
+			Debug.e(t);
+		}
+	}
+	
 	/**
 	 * Creates a new set of players
 	 * 
@@ -122,7 +195,7 @@ public class ClientGameManager implements AetherFlamesConstants {
 	 * @param velocity The velocity of the bullet
 	 * @param center The starting coordinate of the bullet
 	 */
-	public synchronized void queueNewBulletEvent(int type, Vector2 velocity, Vector2 center, int angle) {
+	public synchronized void queueNewBulletEvent(int type, Vector2 velocity, Vector2 center, float angle) {
 		NewBulletClientMessage message = (NewBulletClientMessage)messagePool.obtainMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET);
 		int bulletID = nextBulletID;
 		nextBulletID++;
@@ -242,12 +315,18 @@ public class ClientGameManager implements AetherFlamesConstants {
 		this.myID = id;
 	}
 
+	public void setShips(Map<Integer, Ship> m) {
+		this.ships = m;
+	}
+	
 	public void setServerConnector(ServerConnector<SocketConnection> connector) {
 		this.serverConnector = connector;
+		registerMessageHandlers();
 	}
 
 	public void setMessagePool(MessagePool<IMessage> pool) {
 		this.messagePool = pool;
+		initMessagePool();
 	}
 
 	// Getters

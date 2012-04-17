@@ -60,6 +60,8 @@ public class Ship implements AetherFlamesConstants
 	private int currentWeaponIndex;
 	private ArrayList<ProjectileWeapon> availableWeapons;
 	
+	private ClientGameManager clientGameManager;
+	
 	public boolean isWithinRange(Vector2 position, float radius)
 	{
 		float distance = Math.abs((position.cpy().sub(body.getWorldCenter())).len());
@@ -180,7 +182,8 @@ public class Ship implements AetherFlamesConstants
 		if(ep > currentWeapon.COST && weaponIsCool())
 		{
 			ep -= currentWeapon.COST;
-			currentWeapon.fire(barrelPosition(), body.getLinearVelocity(), body.getAngle());
+			clientGameManager.queueNewBulletEvent(currentWeapon.type, body.getLinearVelocity(), barrelPosition(), body.getAngle());
+			//currentWeapon.fire(barrelPosition(), body.getLinearVelocity(), body.getAngle());
 			weaponCooldownOver = System.currentTimeMillis() + currentWeapon.COOLDOWN;
 		}
 	}
@@ -251,7 +254,7 @@ public class Ship implements AetherFlamesConstants
 		return hp;
 	}
 	
-	public Ship(float x, float y, float angle, int color) //angle in degrees 0 is down, -90 is right, 90 is left
+	public Ship(float x, float y, float angle, int color, ClientGameManager pCGM) //angle in degrees 0 is down, -90 is right, 90 is left
 	{
 		//set up ship stats
 		id = color;
@@ -261,6 +264,7 @@ public class Ship implements AetherFlamesConstants
 		weaponCooldownOver = System.currentTimeMillis();
 		setUpBars();
 		currentWeapon = new PlasmaBlaster();
+		clientGameManager = pCGM;
 		//setUpWeapons();
 		
 		//set up physical ship
