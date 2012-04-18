@@ -115,6 +115,7 @@ public class Ship implements AetherFlamesConstants
 		AetherFlamesActivity.mScene.detachChild(energyBar);
 		AetherFlamesActivity.mScene.detachChild(energyBarBackground);
 		AetherFlamesActivity.ships.remove(id);
+		clientGameManager.removeShip(id);
 	}
 	
 	public void damage(int amount)

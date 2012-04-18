@@ -309,6 +309,15 @@ public class ClientGameManager implements AetherFlamesConstants {
 		this.physicsWorld.step();
 		this.frameCount++;
 	}
+	
+	/**
+	 * Removes the given ship from the list
+	 * 
+	 * @param id The id of the ship to remove
+	 */
+	public void removeShip(int id) {
+		this.ships.remove(id);
+	}
 
 	// Setters
 	public void setPhysicsWorld(DistributedFixedStepPhysicsWorld w) {
