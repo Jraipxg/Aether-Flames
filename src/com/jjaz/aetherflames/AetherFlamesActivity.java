@@ -134,7 +134,6 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	private static final int DIALOG_SHOW_SERVER_IP_ID = DIALOG_ENTER_SERVER_IP_ID + 1;
 	private static final int DIALOG_GAME_OVER = DIALOG_SHOW_SERVER_IP_ID + 1;
 	
-	private int mID;
 	private String mServerIP = LOCALHOST_IP;
 	private SocketServer<SocketConnectionClientConnector> mSocketServer;
 	private ServerConnector<SocketConnection> mServerConnector;
@@ -142,7 +141,6 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 
 	private final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
 
-	
 	public static int myShipColor;
 	
 	@Override
@@ -152,8 +150,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		final EngineOptions engineOptions = new EngineOptions(true, ScreenOrientation.LANDSCAPE_FIXED, new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT), AetherFlamesActivity.mCamera);
 		engineOptions.getTouchOptions().setNeedsMultiTouch(true);
 
-		this.mID = 0;
-		this.mClientGameManager = new ClientGameManager(this.mID);
+		this.mClientGameManager = new ClientGameManager(AetherFlamesActivity.myShipColor);
 
 		this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
 		
@@ -396,7 +393,6 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 			});
 			
 			this.mClientGameManager.setServerConnector(this.mServerConnector);
-			this.mClientGameManager.setMessagePool(this.mMessagePool);
 
 			this.mServerConnector.getConnection().start();
 		} catch (final Throwable t) {
@@ -455,6 +451,8 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		ships.put(Ship.BLUE_SHIP, new Ship(SHIP_START_PADDING, WORLD_HEIGHT - SHIP_START_PADDING, -135.0f, Ship.BLUE_SHIP, mClientGameManager));
 		ships.put(Ship.PURPLE_SHIP, new Ship(WORLD_WIDTH/2, WORLD_HEIGHT - SHIP_START_PADDING, 180.0f, Ship.PURPLE_SHIP, mClientGameManager));
 		ships.put(Ship.BLACK_SHIP, new Ship(WORLD_WIDTH - SHIP_START_PADDING, WORLD_HEIGHT - SHIP_START_PADDING, 135.0f, Ship.BLACK_SHIP, mClientGameManager));
+		
+		this.mClientGameManager.setShips(ships);
 	}
 
 	private void initHealthCrates()

@@ -53,6 +53,9 @@ public class ClientGameManager implements AetherFlamesConstants {
 		this.updateQueue = new ArrayList<ClientMessage>();
 		this.nextBulletID = myID * 1000000; // makes sure there are enough IDs
 		this.frameCount = 0;
+		this.messagePool = new MessagePool<IMessage>();
+
+		initMessagePool();
 	}
 
 	/**
@@ -74,15 +77,13 @@ public class ClientGameManager implements AetherFlamesConstants {
 	 * @param connector Connection to the game server.
 	 * @param pool Message pool
 	 */
-	public ClientGameManager(DistributedFixedStepPhysicsWorld w, int id, Map<Integer, Ship> m, ServerConnector<SocketConnection> connector, MessagePool<IMessage> pool) {
+	public ClientGameManager(DistributedFixedStepPhysicsWorld w, int id, Map<Integer, Ship> m, ServerConnector<SocketConnection> connector) {
 		this();
 		this.physicsWorld = w;
 		this.myID = id;
 		this.ships = m;
 		this.serverConnector = connector;
-		this.messagePool = pool;
 		
-		initMessagePool();
 		registerMessageHandlers();
 	}
 

@@ -78,7 +78,7 @@ public class AetherFlamesServer extends
 	
 	LinkedList<ServerMessage> messages;
 	int numDone; // needs to reach number of players
-	final int NUM_PLAYERS = 2;
+	final int NUM_PLAYERS = 1;
 	
 	@Override
 	protected SocketConnectionClientConnector newClientConnector(final SocketConnection pSocketConnection) throws IOException {
