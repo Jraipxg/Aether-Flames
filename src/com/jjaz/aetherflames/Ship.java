@@ -266,7 +266,7 @@ public class Ship implements AetherFlamesConstants
 		currentWeapon = new PlasmaBlaster();
 		clientGameManager = pCGM;
 		availableWeapons = new ArrayList<ProjectileWeapon>();
-		//setUpWeapons();
+		setUpWeapons();
 		
 		//set up physical ship
 		this.sprite = new TiledSprite(-20, -20, SHIP_SIZE, SHIP_SIZE, AetherFlamesActivity.mShipTextureRegion, AetherFlamesActivity.mVertexBufferObjectManager);

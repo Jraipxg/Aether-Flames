@@ -154,11 +154,10 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 
 		AetherFlamesActivity.mClientGameManager = new ClientGameManager();
 		
-		//if (WhyIsItDoingItTwice == 1) {
+		if (WhyIsItDoingItTwice == 0) {
 			this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
-		//} else {
-		//	WhyIsItDoingItTwice = 1;
-		//}
+			WhyIsItDoingItTwice = 1;
+		} 
 		
 		return engineOptions;
 	}
