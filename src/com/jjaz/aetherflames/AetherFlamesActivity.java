@@ -75,7 +75,8 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	// Constants
 	// ===========================================================
 
-	private static final String LOCALHOST_IP = "192.168.1.4";
+	//private static final String LOCALHOST_IP = "192.168.1.4";
+	private static final String LOCALHOST_IP = "127.0.0.1";
 	
 	protected static final int CAMERA_WIDTH = 960;
 	protected static final int CAMERA_HEIGHT = 540;
@@ -142,6 +143,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	private final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
 
 	public static int myShipColor;
+	public static int WhyIsItDoingItTwice = 0;
 	
 	@Override
 	public EngineOptions onCreateEngineOptions()
@@ -151,8 +153,12 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		engineOptions.getTouchOptions().setNeedsMultiTouch(true);
 
 		AetherFlamesActivity.mClientGameManager = new ClientGameManager(AetherFlamesActivity.myShipColor);
-
-		this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
+		
+		//if (WhyIsItDoingItTwice == 1) {
+			this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
+		//} else {
+		//	WhyIsItDoingItTwice = 1;
+		//}
 		
 		return engineOptions;
 	}
@@ -372,12 +378,13 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	}
 
 	private void initServer() {
-		this.mSocketServer = new AetherFlamesServer(new ClientConnectorListener()) {
+		this.mSocketServer = new AetherFlamesServer(new ClientConnectorListener());
+		/*{
 			@Override
 			protected SocketConnectionClientConnector newClientConnector(final SocketConnection pSocketConnection) throws IOException {
 				return new SocketConnectionClientConnector(pSocketConnection);
 			}
-		};
+		};*/
 
 		this.mSocketServer.start();
 	}

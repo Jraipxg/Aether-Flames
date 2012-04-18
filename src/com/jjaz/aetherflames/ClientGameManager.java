@@ -215,8 +215,8 @@ public class ClientGameManager implements AetherFlamesConstants {
 					this.serverConnector.sendClientMessage(message);
 					this.messagePool.recycleMessage(message);
 				}
+				this.updateQueue.clear(); // empty the queue now that they are sent
 				DoneClientMessage doneMessage = (DoneClientMessage)this.messagePool.obtainMessage(FLAG_MESSAGE_CLIENT_DONE);
-				doneMessage.setDone(true);
 				this.serverConnector.sendClientMessage(doneMessage);
 				this.messagePool.recycleMessage(doneMessage);
 			} catch (IOException e) {

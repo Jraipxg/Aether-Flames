@@ -48,6 +48,7 @@ public class AetherFlamesServer extends
 		super(SERVER_PORT, pSocketConnectionClientConnectorListener, new DefaultSocketServerListener<SocketConnectionClientConnector>());
 
 		this.initMessagePool();
+		messages = new LinkedList<ServerMessage>();
 		
 		numDone = 0;
 
@@ -88,7 +89,7 @@ public class AetherFlamesServer extends
 			@Override
 			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
 				final NewBulletClientMessage newBulletClientMessage = (NewBulletClientMessage)pClientMessage;
-				final NewBulletServerMessage newBulletServerMessage = new NewBulletServerMessage();
+				final NewBulletServerMessage newBulletServerMessage = (NewBulletServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_NEW_BULLET);
 				newBulletServerMessage.setNewBullet(newBulletClientMessage.mShipID, newBulletClientMessage.mBulletID, newBulletClientMessage.mBulletType,
 													newBulletClientMessage.mVectorX, newBulletClientMessage.mVectorY,
 													newBulletClientMessage.mPosX, newBulletClientMessage.mPosY, newBulletClientMessage.mAngle);
@@ -100,7 +101,7 @@ public class AetherFlamesServer extends
 			@Override
 			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
 				final ShipUpdateClientMessage shipUpdateClientMessage = (ShipUpdateClientMessage)pClientMessage;
-				final ShipUpdateServerMessage shipUpdateServerMessage = new ShipUpdateServerMessage();
+				final ShipUpdateServerMessage shipUpdateServerMessage = (ShipUpdateServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_SHIP_UPDATE);
 				shipUpdateServerMessage.setShipUpdate(shipUpdateClientMessage.mShipID, shipUpdateClientMessage.mHealth,
 													shipUpdateClientMessage.mOrientation, shipUpdateClientMessage.mAngularVelocity,
 													shipUpdateClientMessage.mVectorX, shipUpdateClientMessage.mVectorY,
@@ -113,7 +114,7 @@ public class AetherFlamesServer extends
 			@Override
 			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
 				final CollisionClientMessage collisionClientMessage = (CollisionClientMessage)pClientMessage;
-				final CollisionServerMessage collisionServerMessage = new CollisionServerMessage();
+				final CollisionServerMessage collisionServerMessage = (CollisionServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_COLLISION);
 				collisionServerMessage.setCollision(collisionClientMessage.mShipID, collisionClientMessage.mBulletID);
 				messages.addLast(collisionServerMessage);
 			}
@@ -157,7 +158,7 @@ public class AetherFlamesServer extends
 				// can use this to send out all the client messages
 				numDone += 1;
 				if (numDone == NUM_PLAYERS) {
-					messages.addLast(new DoneServerMessage(true));
+					messages.addLast((DoneServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_DONE));
 					try {
 						Iterator<ServerMessage> iterator = messages.iterator();
 						while (iterator.hasNext()) {

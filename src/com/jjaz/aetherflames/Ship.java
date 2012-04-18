@@ -265,6 +265,7 @@ public class Ship implements AetherFlamesConstants
 		setUpBars();
 		currentWeapon = new PlasmaBlaster();
 		clientGameManager = pCGM;
+		availableWeapons = new ArrayList<ProjectileWeapon>();
 		//setUpWeapons();
 		
 		//set up physical ship
