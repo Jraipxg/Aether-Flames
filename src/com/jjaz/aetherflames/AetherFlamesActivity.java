@@ -152,7 +152,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		final EngineOptions engineOptions = new EngineOptions(true, ScreenOrientation.LANDSCAPE_FIXED, new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT), AetherFlamesActivity.mCamera);
 		engineOptions.getTouchOptions().setNeedsMultiTouch(true);
 
-		AetherFlamesActivity.mClientGameManager = new ClientGameManager(AetherFlamesActivity.myShipColor);
+		AetherFlamesActivity.mClientGameManager = new ClientGameManager();
 		
 		//if (WhyIsItDoingItTwice == 1) {
 			this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
@@ -459,6 +459,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		ships.put(Ship.PURPLE_SHIP, new Ship(WORLD_WIDTH/2, WORLD_HEIGHT - SHIP_START_PADDING, 180.0f, Ship.PURPLE_SHIP, mClientGameManager));
 		ships.put(Ship.BLACK_SHIP, new Ship(WORLD_WIDTH - SHIP_START_PADDING, WORLD_HEIGHT - SHIP_START_PADDING, 135.0f, Ship.BLACK_SHIP, mClientGameManager));
 		
+		AetherFlamesActivity.mClientGameManager.setID(AetherFlamesActivity.myShipColor);
 		AetherFlamesActivity.mClientGameManager.setShips(ships);
 	}
 
