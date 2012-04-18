@@ -75,7 +75,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	// Constants
 	// ===========================================================
 
-	private static final String LOCALHOST_IP = "127.0.0.1";
+	private static final String LOCALHOST_IP = "192.168.1.4";
 	
 	protected static final int CAMERA_WIDTH = 960;
 	protected static final int CAMERA_HEIGHT = 540;
@@ -137,7 +137,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	private String mServerIP = LOCALHOST_IP;
 	private SocketServer<SocketConnectionClientConnector> mSocketServer;
 	private ServerConnector<SocketConnection> mServerConnector;
-	private ClientGameManager mClientGameManager;
+	public static ClientGameManager mClientGameManager;
 
 	private final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
 
@@ -150,7 +150,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		final EngineOptions engineOptions = new EngineOptions(true, ScreenOrientation.LANDSCAPE_FIXED, new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT), AetherFlamesActivity.mCamera);
 		engineOptions.getTouchOptions().setNeedsMultiTouch(true);
 
-		this.mClientGameManager = new ClientGameManager(AetherFlamesActivity.myShipColor);
+		AetherFlamesActivity.mClientGameManager = new ClientGameManager(AetherFlamesActivity.myShipColor);
 
 		this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
 		
@@ -202,13 +202,13 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		AetherFlamesActivity.mScene.setBackground(new Background(0, 0, 0));
 		
 		AetherFlamesActivity.mVertexBufferObjectManager = this.getVertexBufferObjectManager();
-		AetherFlamesActivity.mPhysicsWorld = new DistributedFixedStepPhysicsWorld(30, new Vector2(0, 0), false, 8, 1, this.mClientGameManager);
+		AetherFlamesActivity.mPhysicsWorld = new DistributedFixedStepPhysicsWorld(30, new Vector2(0, 0), false, 8, 1, AetherFlamesActivity.mClientGameManager);
 
 		this.mCollisionHandler = new CollisionHandler();
 		this.mSceneUpdateHandler = new SceneUpdateHandler();
 		AetherFlamesActivity.mPhysicsWorld.setContactListener(mCollisionHandler);
 		
-		this.mClientGameManager.setPhysicsWorld(AetherFlamesActivity.mPhysicsWorld);
+		AetherFlamesActivity.mClientGameManager.setPhysicsWorld(AetherFlamesActivity.mPhysicsWorld);
 		
 		ships = new ConcurrentHashMap<Integer,Ship>();
 		
@@ -392,7 +392,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 				}
 			});
 			
-			this.mClientGameManager.setServerConnector(this.mServerConnector);
+			AetherFlamesActivity.mClientGameManager.setServerConnector(this.mServerConnector);
 
 			this.mServerConnector.getConnection().start();
 		} catch (final Throwable t) {
@@ -416,7 +416,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	
 	private void initOnScreenControls()
 	{		
-		this.mControlStick = new AnalogOnScreenControl(0, CAMERA_HEIGHT - AetherFlamesActivity.mControlStickBaseTextureRegion.getHeight(), AetherFlamesActivity.mCamera, AetherFlamesActivity.mControlStickBaseTextureRegion, AetherFlamesActivity.mControlStickKnobTextureRegion, 0.1f, this.getVertexBufferObjectManager(), new ShipMovementControlListener(ships.get(AetherFlamesActivity.myShipColor), this.mClientGameManager));
+		this.mControlStick = new AnalogOnScreenControl(0, CAMERA_HEIGHT - AetherFlamesActivity.mControlStickBaseTextureRegion.getHeight(), AetherFlamesActivity.mCamera, AetherFlamesActivity.mControlStickBaseTextureRegion, AetherFlamesActivity.mControlStickKnobTextureRegion, 0.1f, this.getVertexBufferObjectManager(), new ShipMovementControlListener(ships.get(AetherFlamesActivity.myShipColor), AetherFlamesActivity.mClientGameManager));
 		this.mControlStick.getControlBase().setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 		this.mControlStick.getControlBase().setAlpha(0.5f);
 		this.mControlStick.getControlBase().setScaleCenter(0, 128);
@@ -452,7 +452,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		ships.put(Ship.PURPLE_SHIP, new Ship(WORLD_WIDTH/2, WORLD_HEIGHT - SHIP_START_PADDING, 180.0f, Ship.PURPLE_SHIP, mClientGameManager));
 		ships.put(Ship.BLACK_SHIP, new Ship(WORLD_WIDTH - SHIP_START_PADDING, WORLD_HEIGHT - SHIP_START_PADDING, 135.0f, Ship.BLACK_SHIP, mClientGameManager));
 		
-		this.mClientGameManager.setShips(ships);
+		AetherFlamesActivity.mClientGameManager.setShips(ships);
 	}
 
 	private void initHealthCrates()
