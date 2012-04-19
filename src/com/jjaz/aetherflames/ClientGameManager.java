@@ -179,7 +179,7 @@ public class ClientGameManager implements AetherFlamesConstants {
 	}
 	
 	public synchronized void queueTurnInstantAndThrustEvent(Vector2 direction) {
-			Ship myShip = this.ships.get(myID);
+		Ship myShip = this.ships.get(myID);
 			
 		if (myShip != null) { // don't bother if I died already
 			ShipUpdateClientMessage message = (ShipUpdateClientMessage)this.messagePool.obtainMessage(FLAG_MESSAGE_CLIENT_SHIP_UPDATE);
