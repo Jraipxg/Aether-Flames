@@ -179,14 +179,16 @@ public class ClientGameManager implements AetherFlamesConstants {
 	}
 	
 	public synchronized void queueTurnInstantAndThrustEvent(Vector2 direction) {
-		ShipUpdateClientMessage message = (ShipUpdateClientMessage)this.messagePool.obtainMessage(FLAG_MESSAGE_CLIENT_SHIP_UPDATE);
-		Ship myShip = this.ships.get(myID);
-		
-		float angle = (float) Math.atan2(-direction.x, direction.y);
-
-		// queue the new message
-		message.setShipUpdate(this.myID, myShip.getHealth(), angle, FIELD_EMPTY, direction.x, direction.y, FIELD_EMPTY, FIELD_EMPTY);
-		this.updateQueue.add(message);
+			Ship myShip = this.ships.get(myID);
+			
+		if (myShip != null) { // don't bother if I died already
+			ShipUpdateClientMessage message = (ShipUpdateClientMessage)this.messagePool.obtainMessage(FLAG_MESSAGE_CLIENT_SHIP_UPDATE);
+			float angle = (float) Math.atan2(-direction.x, direction.y);
+	
+			// queue the new message
+			message.setShipUpdate(this.myID, myShip.getHealth(), angle, FIELD_EMPTY, direction.x, direction.y, FIELD_EMPTY, FIELD_EMPTY);
+			this.updateQueue.add(message);
+		}
 	}
 
 	/**
@@ -197,12 +199,14 @@ public class ClientGameManager implements AetherFlamesConstants {
 	 * @param center The starting coordinate of the bullet
 	 */
 	public synchronized void queueNewBulletEvent(int type, Vector2 velocity, Vector2 center, float angle) {
-		NewBulletClientMessage message = (NewBulletClientMessage)messagePool.obtainMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET);
-		int bulletID = nextBulletID;
-		nextBulletID++;
-		
-		message.setNewBullet(myID, bulletID, type, velocity.x, velocity.y, center.x, center.y, angle);
-		this.updateQueue.add(message);
+		if (this.ships.get(myID) != null) { // don't bother if I died already
+			NewBulletClientMessage message = (NewBulletClientMessage)messagePool.obtainMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET);
+			int bulletID = nextBulletID;
+			nextBulletID++;
+			
+			message.setNewBullet(myID, bulletID, type, velocity.x, velocity.y, center.x, center.y, angle);
+			this.updateQueue.add(message);
+		}
 	}
 
 	/**
