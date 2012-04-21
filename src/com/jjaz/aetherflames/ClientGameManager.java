@@ -21,8 +21,6 @@ import com.jjaz.aetherflames.messages.client.ShipUpdateClientMessage;
 import com.jjaz.aetherflames.messages.client.NewBulletClientMessage;
 import com.jjaz.aetherflames.messages.server.CollisionServerMessage;
 import com.jjaz.aetherflames.messages.server.DoneServerMessage;
-import com.jjaz.aetherflames.messages.server.GameEndServerMessage;
-import com.jjaz.aetherflames.messages.server.GameStartServerMessage;
 import com.jjaz.aetherflames.messages.server.NewBulletServerMessage;
 import com.jjaz.aetherflames.messages.server.ShipUpdateServerMessage;
 import com.jjaz.aetherflames.physics.DistributedFixedStepPhysicsWorld;

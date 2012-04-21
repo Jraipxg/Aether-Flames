@@ -3,6 +3,7 @@ package com.jjaz.aetherflames;
 import java.util.ArrayList;
 
 import org.andengine.entity.primitive.Rectangle;
+import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.sprite.TiledSprite;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
@@ -41,7 +42,8 @@ public class Ship implements AetherFlamesConstants
 	public int id;
 	private int hp;
 	private int ep;
-	private int thrust = 10;
+	private float thrust = 7.5f;
+	private boolean shieldsOn;
 	private float epRegenRate = 200.0f; //amount of EP regenerated in a second
 	
 	private long weaponCooldownOver;
@@ -49,6 +51,7 @@ public class Ship implements AetherFlamesConstants
 	
 	private Body body;
 	private TiledSprite sprite;
+	private Sprite shield;
 	private Rectangle healthBar;
 	private Rectangle healthBarBackground;
 	private Rectangle energyBar;
@@ -64,7 +67,9 @@ public class Ship implements AetherFlamesConstants
 	
 	public boolean isWithinRange(Vector2 position, float radius)
 	{
-		float distance = Math.abs((position.cpy().sub(body.getWorldCenter())).len());
+		position.x -= body.getWorldCenter().x;
+		position.y -= body.getWorldCenter().y;
+		float distance = (float) Math.sqrt(position.x*position.x + position.y*position.y);//Math.abs((position.cpy().sub(body.getWorldCenter())).len());
 		if(distance - (SHIP_SIZE*AetherFlamesActivity.CAMERA_TO_WORLD) < radius)
 		{
 			return true;
@@ -95,7 +100,14 @@ public class Ship implements AetherFlamesConstants
 	
 	public void regen()
 	{
-		long timeSinceLastRegen = System.currentTimeMillis() - regenCooldownOver;
+		long currentTime = System.currentTimeMillis();
+		if(shieldsOn)
+		{
+			regenCooldownOver = currentTime;
+		}
+		
+		long timeSinceLastRegen = currentTime - regenCooldownOver;
+		
 		if(timeSinceLastRegen > 0)
 		{
 			ep += (int)((float)epRegenRate * ((float)timeSinceLastRegen/1000.0f));
@@ -120,11 +132,32 @@ public class Ship implements AetherFlamesConstants
 	
 	public void damage(int amount)
 	{
+		if(shieldsOn)
+		{
+			if(ep > amount)
+			{
+				ep -= amount;
+			}
+			else
+			{
+				deactivateShields();
+				hp -= (amount - ep);
+				ep = 0;
+				if(hp <= 0)
+				{
+					destroyShip();
+				}
+			}
+		}
+		else
+		{
 		hp -= amount;
 		if(hp <= 0)
 		{
 			destroyShip();
 		}
+	}
+	
 	}
 	
 	public void heal(int amount)
@@ -134,6 +167,21 @@ public class Ship implements AetherFlamesConstants
 		{
 			hp = MAX_HP;
 		}
+	}
+	
+	public void setAngle(float angle)
+	{
+		body.setTransform(body.getPosition(), angle);
+	}
+	
+	public void setPosition(Vector2 position)
+	{
+		body.setTransform(position, body.getAngle());
+	}
+	
+	public void setVelocity(Vector2 velocity)
+	{
+		body.setLinearVelocity(velocity);
 	}
 	
 	public void fireThrusters(float magnitude)
@@ -165,10 +213,11 @@ public class Ship implements AetherFlamesConstants
 		body.setAngularVelocity(Math.signum(direction));
 		sprite.setRotation(MathUtils.radToDeg(body.getAngle()));
 	}
+	
 	Vector2 barrelPosition()
 	{
 		Vector2 shipCenter = body.getLocalCenter().cpy();
-		shipCenter.y += 1.25;
+		shipCenter.y += currentWeapon.BULLET_SIZE*AetherFlamesActivity.CAMERA_TO_WORLD + 1.25;
 		Vector2 gunPoint = body.getWorldPoint(shipCenter);
 		return gunPoint;
 	}
@@ -180,12 +229,15 @@ public class Ship implements AetherFlamesConstants
 	
 	public void fireWeapon()
 	{
-		if(ep > currentWeapon.COST && weaponIsCool())
+		if(!shieldsOn) //can't fire while shields up
 		{
-			ep -= currentWeapon.COST;
-			clientGameManager.queueNewBulletEvent(currentWeapon.type, body.getLinearVelocity(), barrelPosition(), body.getAngle());
-			//currentWeapon.fire(barrelPosition(), body.getLinearVelocity(), body.getAngle());
-			weaponCooldownOver = System.currentTimeMillis() + currentWeapon.COOLDOWN;
+			if(ep > currentWeapon.COST && weaponIsCool())
+			{
+				ep -= currentWeapon.COST;
+				clientGameManager.queueNewBulletEvent(currentWeapon.type, body.getLinearVelocity(), barrelPosition(), body.getAngle());
+				//currentWeapon.fire(barrelPosition(), body.getLinearVelocity(), body.getAngle());
+				weaponCooldownOver = System.currentTimeMillis() + currentWeapon.COOLDOWN;
+			}
 		}
 	}
 
@@ -217,12 +269,27 @@ public class Ship implements AetherFlamesConstants
 
 	public void activateShields()
 	{
-		//TODO
+		if(ep > 0)
+		{
+			shield.setVisible(true);
+			shieldsOn = true;
+		}
+		else
+		{
+			shield.setVisible(false);
+			shieldsOn = false;
+		}
+	}
+	
+	public boolean isShielded()
+	{
+		return shieldsOn;
 	}
 	
 	public void deactivateShields()
 	{
-		//TODO
+		shield.setVisible(false);
+		shieldsOn = false;
 	}
 	
 	void setUpBars()
@@ -246,12 +313,14 @@ public class Ship implements AetherFlamesConstants
 	
 	void setUpWeapons()
 	{
+		//ProjectileWeapon pb = new NyanCannon();
 		availableWeapons.add(new PlasmaBlaster());
-		
+		availableWeapons.add(new Nyannon());
 		currentWeapon = availableWeapons.get(0);
 	}
 	
-	public int getHealth() {
+	public int getHealth() 
+	{
 		return hp;
 	}
 	
@@ -261,10 +330,11 @@ public class Ship implements AetherFlamesConstants
 		id = color;
 		hp = MAX_HP;
 		ep = MAX_EP;
+		shieldsOn = false;
 		regenCooldownOver = System.currentTimeMillis();
 		weaponCooldownOver = System.currentTimeMillis();
 		setUpBars();
-		currentWeapon = new PlasmaBlaster();
+		//currentWeapon = new PlasmaBlaster();
 		clientGameManager = pCGM;
 		availableWeapons = new ArrayList<ProjectileWeapon>();
 		setUpWeapons();
@@ -272,6 +342,10 @@ public class Ship implements AetherFlamesConstants
 		//set up physical ship
 		this.sprite = new TiledSprite(-20, -20, SHIP_SIZE, SHIP_SIZE, AetherFlamesActivity.mShipTextureRegion, AetherFlamesActivity.mVertexBufferObjectManager);
 		this.sprite.setCurrentTileIndex(color);
+		
+		this.shield = new Sprite(0, 0, SHIP_SIZE, SHIP_SIZE, AetherFlamesActivity.mShieldTextureRegion, AetherFlamesActivity.mVertexBufferObjectManager);
+		sprite.attachChild(shield);
+		shield.setVisible(false);
 
 		final FixtureDef shipFixtureDef = PhysicsFactory.createFixtureDef(1, 0.5f, 0.0f);
 		this.body = PhysicsFactory.createCircleBody(AetherFlamesActivity.mPhysicsWorld, this.sprite, BodyType.DynamicBody, shipFixtureDef);

@@ -11,23 +11,49 @@ public class ButtonControlListener implements IOnScreenControlListener
 	{
 		mShip = ship;
 	}
-	
+
+	boolean leftAlreadyPressed;
+	boolean rightAlreadyPressed;
 	@Override
 	public void onControlChange(final BaseOnScreenControl pBaseOnScreenControl, final float pValueX, final float pValueY) 
 	{
+		
 		if (mShip != null && mShip.getHealth() > 0) {
 			if(pValueX < 0) //left button
 			{
-				mShip.fireWeapon();
+				if(!leftAlreadyPressed)
+				{
+					mShip.previousWeapon();
+				}
+				leftAlreadyPressed = true;
 			}
+			else
+			{
+				leftAlreadyPressed = false;
+			}
+
 			if(pValueX > 0) //right button
 			{
-				mShip.fireWeapon();
+				if(!rightAlreadyPressed)
+				{
+					mShip.nextWeapon();
+				}
+				rightAlreadyPressed = true;
 			}
+			else
+			{
+				rightAlreadyPressed = false;
+			}
+
 			if(pValueY < 0) //up button
 			{
-				mShip.fireWeapon();
+				mShip.activateShields();
 			}
+			else
+			{
+				mShip.deactivateShields();
+			}
+
 			if(pValueY > 0) //down button
 			{
 				mShip.fireWeapon();

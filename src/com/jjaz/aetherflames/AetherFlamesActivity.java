@@ -17,6 +17,7 @@ import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
+import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.text.Text;
 import org.andengine.entity.text.TextOptions;
@@ -70,7 +71,7 @@ import com.jjaz.aetherflames.messages.server.ConnectionCloseServerMessage;
 import com.jjaz.aetherflames.physics.DistributedFixedStepPhysicsWorld;
 
 public class AetherFlamesActivity extends SimpleBaseGameActivity implements AetherFlamesConstants
-{
+{	
 	// ===========================================================
 	// Constants
 	// ===========================================================
@@ -108,11 +109,17 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	protected static BitmapTextureAtlas mShipTextures;
 	protected static TiledTextureRegion mShipTextureRegion;
 
+	protected static BitmapTextureAtlas mShieldTextures;
+	protected static ITextureRegion mShieldTextureRegion;
+
 	protected static BitmapTextureAtlas mHealthCrateTexture;
 	protected static ITextureRegion mHealthCrateTextureRegion;
 
-	protected static BitmapTextureAtlas mPlasmaBlastTexture; 
-	protected static ITextureRegion mPlasmaBlastTextureRegion; //TODO: change this to an animated sprite
+	protected static BitmapTextureAtlas mPlasmaSphereTexture; 
+	protected static TiledTextureRegion mPlasmaSphereTextureRegion;
+
+	protected static BitmapTextureAtlas mNyanTexture; 
+	protected static TiledTextureRegion mNyanTextureRegion; 
 
 	protected static BitmapTextureAtlas mControlStickTexture;
 	protected static ITextureRegion mControlStickBaseTextureRegion;
@@ -175,6 +182,10 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		AetherFlamesActivity.mShipTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(AetherFlamesActivity.mShipTextures, this, "ships.png", 0, 0, 8, 1);
 		AetherFlamesActivity.mShipTextures.load();
 		
+		AetherFlamesActivity.mShieldTextures = new BitmapTextureAtlas(this.getTextureManager(), 128, 128, TextureOptions.BILINEAR);
+		AetherFlamesActivity.mShieldTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mShieldTextures, this, "Shield.png", 0, 0);
+		AetherFlamesActivity.mShieldTextures.load();
+		
 		AetherFlamesActivity.mControlStickTexture = new BitmapTextureAtlas(this.getTextureManager(), 256, 128, TextureOptions.BILINEAR);
 		AetherFlamesActivity.mControlStickBaseTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mControlStickTexture, this, "onscreen_control_base.png", 0, 0);
 		AetherFlamesActivity.mControlStickKnobTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mControlStickTexture, this, "onscreen_control_knob.png", 128, 0);
@@ -189,9 +200,13 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		AetherFlamesActivity.mHealthCrateTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mHealthCrateTexture, this, "healthCrate.png", 0, 0);
 		AetherFlamesActivity.mHealthCrateTexture.load();
 		
-		AetherFlamesActivity.mPlasmaBlastTexture = new BitmapTextureAtlas(this.getTextureManager(), 64, 64, TextureOptions.BILINEAR);
-		AetherFlamesActivity.mPlasmaBlastTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mPlasmaBlastTexture, this, "Bullet.png", 0, 0);
-		AetherFlamesActivity.mPlasmaBlastTexture.load();
+		AetherFlamesActivity.mPlasmaSphereTexture = new BitmapTextureAtlas(this.getTextureManager(), 128, 32, TextureOptions.BILINEAR);
+		AetherFlamesActivity.mPlasmaSphereTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(AetherFlamesActivity.mPlasmaSphereTexture, this, "PlasmaSphere.png", 0, 0, 4, 1);
+		AetherFlamesActivity.mPlasmaSphereTexture.load();
+		
+		AetherFlamesActivity.mNyanTexture = new BitmapTextureAtlas(this.getTextureManager(), 1200, 100, TextureOptions.BILINEAR);
+		AetherFlamesActivity.mNyanTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(AetherFlamesActivity.mNyanTexture, this, "nyanlinelow.png", 0, 0, 12, 1);
+		AetherFlamesActivity.mNyanTexture.load();
 
 		AetherFlamesActivity.mFont = FontFactory.create(this.getFontManager(), this.getTextureManager(), 256, 256, 30, true, Color.WHITE);
 		AetherFlamesActivity.mFont.load();
@@ -221,6 +236,11 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		this.initShips();
 		this.initHealthCrates();
 		this.initOnScreenControls();
+		
+		//AnimatedSprite nyan = new AnimatedSprite(100, 100, AetherFlamesActivity.mNyanTextureRegion, AetherFlamesActivity.mVertexBufferObjectManager);
+		//nyan.animate(70);
+		//nyan.setScale(0.5f, 0.5f);
+		//AetherFlamesActivity.mScene.attachChild(nyan);
 		
 		AetherFlamesActivity.mScene.registerUpdateHandler(this.mSceneUpdateHandler);
 		

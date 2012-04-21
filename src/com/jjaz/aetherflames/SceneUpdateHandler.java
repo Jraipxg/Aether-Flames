@@ -9,8 +9,6 @@ import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsConnectorManager;
 import org.andengine.util.HorizontalAlign;
 
-import android.widget.Toast;
-
 import com.badlogic.gdx.physics.box2d.Body;
 
 public class SceneUpdateHandler implements IUpdateHandler

@@ -1,9 +1,10 @@
 package com.jjaz.aetherflames;
 
-import org.andengine.entity.sprite.Sprite;
+import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
-import org.andengine.opengl.texture.region.ITextureRegion;
+import org.andengine.opengl.texture.region.TiledTextureRegion;
+import org.andengine.util.math.MathUtils;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -16,27 +17,37 @@ public abstract class ProjectileWeapon implements AetherFlamesConstants
 	protected int COOLDOWN;//in ms
 	protected int DAMAGE;
 	protected float BLAST_RADIUS;//in m
-	
+
 	protected int BULLET_SIZE;
-	protected int LAUNCH_VELOCITY;
+	protected float BULLET_DENSITY;
+	protected float LAUNCH_VELOCITY;
 	
-	protected ITextureRegion texture;
+	protected TiledTextureRegion texture;
 	protected String name;
 	protected int type;
 	
 	public void fire(Vector2 position, Vector2 initialVelocity, float angle)
 	{
-		Sprite bullet = new Sprite(-BULLET_SIZE, -BULLET_SIZE, BULLET_SIZE, BULLET_SIZE, texture, AetherFlamesActivity.mVertexBufferObjectManager);
-
-		FixtureDef bulletFixtureDef = PhysicsFactory.createFixtureDef(0.1f, 0.5f, 0.0f);
+		AnimatedSprite bullet = new AnimatedSprite(-BULLET_SIZE, -BULLET_SIZE, BULLET_SIZE, BULLET_SIZE, texture, AetherFlamesActivity.mVertexBufferObjectManager);
+		bullet.animate(70);
+		
+		FixtureDef bulletFixtureDef = PhysicsFactory.createFixtureDef(BULLET_DENSITY, 0.5f, 0.0f);
 		Body bulletBody = PhysicsFactory.createCircleBody(AetherFlamesActivity.mPhysicsWorld, bullet, BodyType.DynamicBody, bulletFixtureDef);
-		bulletBody.setTransform(position.x, position.y, 0);
-
+		
 		Vector2 barrelVelocity = initialVelocity.cpy();
 		barrelVelocity.x += -(float)(LAUNCH_VELOCITY*Math.sin(angle));
 		barrelVelocity.y += (float)(LAUNCH_VELOCITY*Math.cos(angle));
 		bulletBody.setLinearVelocity(barrelVelocity);
 		
+		float launchAngle = (float) Math.atan2(barrelVelocity.y, barrelVelocity.x);
+		bulletBody.setTransform(position.x, position.y, launchAngle);
+		
+		if(launchAngle > Math.PI/2 || (launchAngle < -Math.PI/2 && launchAngle > -Math.PI)) //fix graphic inversion
+		{
+			bullet.setScale(1, -1);
+		}
+		bullet.setRotation(MathUtils.radToDeg(launchAngle));
+
 		bulletBody.setUserData("projectile " + name  + " " + DAMAGE  + " " + BLAST_RADIUS);
 		
 		AetherFlamesActivity.mPhysicsWorld.registerPhysicsConnector(new PhysicsConnector(bullet, bulletBody, true, true));

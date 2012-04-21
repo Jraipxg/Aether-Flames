@@ -4,6 +4,7 @@ public interface AetherFlamesConstants {
 
 	/* Bullet Types */
 	public static final int PLASMA_BLASTER = 0;
+	public static final int NYANNON = 1;
 //	public static final int MINE = PLASMA_BLASTER + 1;
 	
 	/* General networking constants */
