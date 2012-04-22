@@ -11,6 +11,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 public class HealthCrate
 {
 	public static final int HEALING_AMOUNT = 500;
+	public static final int DROP_RATE = 20000; //ms
 	
 	private static final int HEALTH_SIZE = 40;
 	
