@@ -88,35 +88,42 @@ public class AetherFlamesServer extends
 		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET, NewBulletClientMessage.class, new IClientMessageHandler<SocketConnection>() {
 			@Override
 			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
-				final NewBulletClientMessage newBulletClientMessage = (NewBulletClientMessage)pClientMessage;
-				final NewBulletServerMessage newBulletServerMessage = (NewBulletServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_NEW_BULLET);
-				newBulletServerMessage.setNewBullet(newBulletClientMessage.mShipID, newBulletClientMessage.mBulletID, newBulletClientMessage.mBulletType,
-													newBulletClientMessage.mVectorX, newBulletClientMessage.mVectorY,
-													newBulletClientMessage.mPosX, newBulletClientMessage.mPosY, newBulletClientMessage.mAngle);
-				messages.addLast(newBulletServerMessage);
+				synchronized (AetherFlamesServer.this) {
+					final NewBulletClientMessage newBulletClientMessage = (NewBulletClientMessage)pClientMessage;
+					final NewBulletServerMessage newBulletServerMessage = (NewBulletServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_NEW_BULLET);
+					newBulletServerMessage.setNewBullet(newBulletClientMessage.mShipID, newBulletClientMessage.mBulletID, newBulletClientMessage.mBulletType,
+														newBulletClientMessage.mVectorX, newBulletClientMessage.mVectorY,
+														newBulletClientMessage.mPosX, newBulletClientMessage.mPosY, newBulletClientMessage.mAngle);
+					messages.addLast(newBulletServerMessage);
+				}
 			}
 		});
 
 		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_SHIP_UPDATE, ShipUpdateClientMessage.class, new IClientMessageHandler<SocketConnection>() {
 			@Override
 			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
-				final ShipUpdateClientMessage shipUpdateClientMessage = (ShipUpdateClientMessage)pClientMessage;
-				final ShipUpdateServerMessage shipUpdateServerMessage = (ShipUpdateServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_SHIP_UPDATE);
-				shipUpdateServerMessage.setShipUpdate(shipUpdateClientMessage.mShipID, shipUpdateClientMessage.mHealth,
-													shipUpdateClientMessage.mOrientation, shipUpdateClientMessage.mAngularVelocity,
-													shipUpdateClientMessage.mVectorX, shipUpdateClientMessage.mVectorY,
-													shipUpdateClientMessage.mPosX, shipUpdateClientMessage.mPosY);
-				messages.addLast(shipUpdateServerMessage);
+				synchronized (AetherFlamesServer.this) {
+					final ShipUpdateClientMessage shipUpdateClientMessage = (ShipUpdateClientMessage)pClientMessage;
+					final ShipUpdateServerMessage shipUpdateServerMessage = (ShipUpdateServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_SHIP_UPDATE);
+					shipUpdateServerMessage.setShipUpdate(shipUpdateClientMessage.mShipID, shipUpdateClientMessage.mHealth,
+														shipUpdateClientMessage.mOrientation, shipUpdateClientMessage.mAngularVelocity,
+														shipUpdateClientMessage.mVectorX, shipUpdateClientMessage.mVectorY,
+														shipUpdateClientMessage.mPosX, shipUpdateClientMessage.mPosY);
+					messages.addLast(shipUpdateServerMessage);
+				}
 			}
 		});
 
 		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_COLLISION, CollisionClientMessage.class, new IClientMessageHandler<SocketConnection>() {
 			@Override
 			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
-				final CollisionClientMessage collisionClientMessage = (CollisionClientMessage)pClientMessage;
-				final CollisionServerMessage collisionServerMessage = (CollisionServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_COLLISION);
-				collisionServerMessage.setCollision(collisionClientMessage.mShipID, collisionClientMessage.mBulletID);
-				messages.addLast(collisionServerMessage);
+
+				synchronized (AetherFlamesServer.this) {
+					final CollisionClientMessage collisionClientMessage = (CollisionClientMessage)pClientMessage;
+					final CollisionServerMessage collisionServerMessage = (CollisionServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_COLLISION);
+					collisionServerMessage.setCollision(collisionClientMessage.mShipID, collisionClientMessage.mBulletID);
+					messages.addLast(collisionServerMessage);
+				}
 			}
 		});
 		
@@ -156,22 +163,25 @@ public class AetherFlamesServer extends
 			@Override
 			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
 				// can use this to send out all the client messages
-				numDone += 1;
-				if (numDone == NUM_PLAYERS) {
-					messages.addLast((DoneServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_DONE));
-					try {
-						Iterator<ServerMessage> iterator = messages.iterator();
-						while (iterator.hasNext()) {
-							ServerMessage message = iterator.next();
-							AetherFlamesServer.this.sendBroadcastServerMessage(message);
-							AetherFlamesServer.this.mMessagePool.recycleMessage(message);
+				synchronized (AetherFlamesServer.this) {
+					numDone += 1;
+					if (numDone == NUM_PLAYERS) {
+						messages.addLast((DoneServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_DONE));
+						try {
+							Iterator<ServerMessage> iterator = messages.iterator();
+							while (iterator.hasNext()) {
+								ServerMessage message = iterator.next();
+								AetherFlamesServer.this.sendBroadcastServerMessage(message);
+								AetherFlamesServer.this.mMessagePool.recycleMessage(message);
+							}
+						} catch (IOException e) {
+							Debug.e(e);
 						}
-					} catch (IOException e) {
-						Debug.e(e);
+						messages.clear();
+						numDone = 0; // reset
 					}
-					messages.clear();
-					numDone = 0; // reset
 				}
+
 			}
 		});
 
