@@ -74,7 +74,7 @@ public class SceneUpdateHandler implements IUpdateHandler
 			AetherFlamesActivity.mScene.attachChild(winText);
 			AetherFlamesActivity.mGameEngine.stop();
 		}
-		AetherFlamesActivity.mClientGameManager.sendUpdates();
+		//AetherFlamesActivity.mClientGameManager.sendUpdates();
 	}
 
 	@Override

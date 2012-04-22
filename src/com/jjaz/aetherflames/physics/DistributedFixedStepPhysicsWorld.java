@@ -44,7 +44,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld {
 		
 		if (this.mSecondsElapsedAccumulator >= stepLength && !mStepInProgress) {
 			this.mStepInProgress = true;
-			// this.mClientGameManager.sendUpdates();
+			this.mClientGameManager.sendUpdates();
 		}
 		
 		this.mPhysicsConnectorManager.onUpdate(pSecondsElapsed);
