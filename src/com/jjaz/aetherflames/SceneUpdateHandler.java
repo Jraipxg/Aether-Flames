@@ -56,7 +56,7 @@ public class SceneUpdateHandler implements IUpdateHandler
 		{
 			PhysicsConnector pc = pcm.get(i);
 			if(deleted(pc))
-			{
+			{ 
 				continue;
 			}
 		}
@@ -76,8 +76,6 @@ public class SceneUpdateHandler implements IUpdateHandler
 			HealthCrate.spawn(spawnX, spawnY);
 			timeOfLastHealthDrop = System.currentTimeMillis();
 		}
-		
-		AetherFlamesActivity.mClientGameManager.sendUpdates();
 	}
 
 	@Override
