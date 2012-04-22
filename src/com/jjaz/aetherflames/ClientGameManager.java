@@ -210,7 +210,7 @@ public class ClientGameManager implements AetherFlamesConstants {
 	/**
 	 * Sends all updates since the last frame to the game server
 	 */
-	public synchronized void sendUpdates() {
+	public synchronized boolean sendUpdates() {
 		if (serverConnector != null) {
 			try {
 				for (ClientMessage message : this.updateQueue) {
@@ -221,10 +221,12 @@ public class ClientGameManager implements AetherFlamesConstants {
 				DoneClientMessage doneMessage = (DoneClientMessage)this.messagePool.obtainMessage(FLAG_MESSAGE_CLIENT_DONE);
 				this.serverConnector.sendClientMessage(doneMessage);
 				this.messagePool.recycleMessage(doneMessage);
+				return true;
 			} catch (IOException e) {
 				Debug.e(e);
 			}
 		}
+		return false;
 	}
 
 	/**

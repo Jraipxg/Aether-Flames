@@ -43,8 +43,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld {
 		final float stepLength = this.mTimeStep;
 		
 		if (this.mSecondsElapsedAccumulator >= stepLength && !mStepInProgress) {
-			this.mStepInProgress = true;
-			this.mClientGameManager.sendUpdates();
+			this.mStepInProgress = this.mClientGameManager.sendUpdates();
 		}
 		
 		this.mPhysicsConnectorManager.onUpdate(pSecondsElapsed);
