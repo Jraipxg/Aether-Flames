@@ -13,8 +13,13 @@ import com.badlogic.gdx.physics.box2d.Body;
 
 public class SceneUpdateHandler implements IUpdateHandler
 {
+	final long timeBetweenHealthDrops = 1000; //ms
+	
+	long timeOfLastHealthDrop;
+	
 	public SceneUpdateHandler()
 	{
+		timeOfLastHealthDrop = 0;
 	}
 	
 	boolean deleted(PhysicsConnector pc)
@@ -62,19 +67,17 @@ public class SceneUpdateHandler implements IUpdateHandler
 			ship.updateStatusBars();
 			ship.regen();
 		}
-		
-		if(AetherFlamesActivity.ships.size() == 1)
+
+		long timeSinceLastHealthDrop = System.currentTimeMillis() - timeOfLastHealthDrop;
+		if(timeSinceLastHealthDrop > HealthCrate.DROP_RATE)
 		{
-			Ship winner = AetherFlamesActivity.ships.entrySet().iterator().next().getValue();
-			final Text winText = new Text(AetherFlamesActivity.CAMERA_WIDTH/2, AetherFlamesActivity.CAMERA_HEIGHT/2, AetherFlamesActivity.mFont, "Player " + winner.id + " wins!", new TextOptions(HorizontalAlign.CENTER), AetherFlamesActivity.mVertexBufferObjectManager);
-			float textHeight = winText.getHeight();
-			float textWidth = winText.getWidth();
-			winText.setY(AetherFlamesActivity.CAMERA_HEIGHT/2 - textHeight/2);
-			winText.setX(AetherFlamesActivity.CAMERA_WIDTH/2 - textWidth/2);
-			AetherFlamesActivity.mScene.attachChild(winText);
-			AetherFlamesActivity.mGameEngine.stop();
+			float spawnX = (float)(Math.random()*AetherFlamesActivity.WORLD_WIDTH*0.8 + AetherFlamesActivity.WORLD_WIDTH*0.1f);
+			float spawnY = (float)(Math.random()*AetherFlamesActivity.WORLD_HEIGHT*0.8 + AetherFlamesActivity.WORLD_HEIGHT*0.1f);
+			HealthCrate.spawn(spawnX, spawnY);
+			timeOfLastHealthDrop = System.currentTimeMillis();
 		}
-		//AetherFlamesActivity.mClientGameManager.sendUpdates();
+		
+		AetherFlamesActivity.mClientGameManager.sendUpdates();
 	}
 
 	@Override

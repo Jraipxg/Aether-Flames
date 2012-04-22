@@ -234,7 +234,6 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		
 		this.initBattlefield();
 		this.initShips();
-		this.initHealthCrates();
 		this.initOnScreenControls();
 		
 		//AnimatedSprite nyan = new AnimatedSprite(100, 100, AetherFlamesActivity.mNyanTextureRegion, AetherFlamesActivity.mVertexBufferObjectManager);
@@ -480,14 +479,6 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		
 		AetherFlamesActivity.mClientGameManager.setID(AetherFlamesActivity.myShipColor);
 		AetherFlamesActivity.mClientGameManager.setShips(ships);
-	}
-
-	private void initHealthCrates()
-	{
-		HealthCrate.spawn(WORLD_WIDTH/2 + HEALTH_CRATE_START_PADDING, WORLD_HEIGHT/2);
-		HealthCrate.spawn(WORLD_WIDTH/2 - HEALTH_CRATE_START_PADDING, WORLD_HEIGHT/2);
-		HealthCrate.spawn(WORLD_WIDTH/2, WORLD_HEIGHT/2 + HEALTH_CRATE_START_PADDING);
-		HealthCrate.spawn(WORLD_WIDTH/2, WORLD_HEIGHT/2 - HEALTH_CRATE_START_PADDING);
 	}
 
 	private void initBattlefield()
