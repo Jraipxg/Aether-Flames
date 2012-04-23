@@ -1,5 +1,7 @@
 package com.jjaz.aetherflames;
 
+import org.andengine.entity.sprite.Sprite;
+
 public class Nyannon extends ProjectileWeapon
 {
 	public Nyannon()
@@ -14,6 +16,11 @@ public class Nyannon extends ProjectileWeapon
 		BULLET_DENSITY = 0.5f;
 		
 		texture = AetherFlamesActivity.mNyanTextureRegion;
+		weaponSelectionSprite = new Sprite(0, 0, AetherFlamesActivity.WEAPON_SELECTION_BOX_SIZE, AetherFlamesActivity.WEAPON_SELECTION_BOX_SIZE, AetherFlamesActivity.mNyannonWeaponTextureRegion, AetherFlamesActivity.mVertexBufferObjectManager);
+		weaponSelectionSprite.setAlpha(0.5f);
+		weaponSelectionSprite.setVisible(false);
+		AetherFlamesActivity.mWeaponSelection.attachChild(weaponSelectionSprite);
+		
 		name = "NyanCat";
 		type = NYANNON;
 	}

@@ -1,8 +1,10 @@
 package com.jjaz.aetherflames;
 
 import org.andengine.entity.sprite.AnimatedSprite;
+import org.andengine.entity.sprite.Sprite;
 import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.extension.physics.box2d.PhysicsFactory;
+import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.texture.region.TiledTextureRegion;
 import org.andengine.util.math.MathUtils;
 
@@ -23,8 +25,11 @@ public abstract class ProjectileWeapon implements AetherFlamesConstants
 	protected float LAUNCH_VELOCITY;
 	
 	protected TiledTextureRegion texture;
+	protected ITextureRegion explosion;
 	protected String name;
 	protected int type;
+	
+	protected Sprite weaponSelectionSprite;
 	
 	public void fire(Vector2 position, Vector2 initialVelocity, float angle)
 	{

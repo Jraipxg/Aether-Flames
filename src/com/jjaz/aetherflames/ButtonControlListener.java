@@ -17,7 +17,6 @@ public class ButtonControlListener implements IOnScreenControlListener
 	@Override
 	public void onControlChange(final BaseOnScreenControl pBaseOnScreenControl, final float pValueX, final float pValueY) 
 	{
-		
 		if (mShip != null && mShip.getHealth() > 0) {
 			if(pValueX < 0) //left button
 			{

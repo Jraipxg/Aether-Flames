@@ -244,23 +244,27 @@ public class Ship implements AetherFlamesConstants
 	public void nextWeapon()
 	{
 		//TODO: make and update current weapon picture
+		currentWeapon.weaponSelectionSprite.setVisible(false);
 		currentWeaponIndex++;
 		if(currentWeaponIndex >= availableWeapons.size())
 		{
 			currentWeaponIndex = 0;
 		}
 		currentWeapon = availableWeapons.get(currentWeaponIndex);
+		currentWeapon.weaponSelectionSprite.setVisible(true);
 	}
 	
 	public void previousWeapon()
 	{
 		//TODO: make and update current weapon picture
+		currentWeapon.weaponSelectionSprite.setVisible(false);
 		currentWeaponIndex--;
 		if(currentWeaponIndex < 0)
 		{
 			currentWeaponIndex = availableWeapons.size() - 1;
 		}
 		currentWeapon = availableWeapons.get(currentWeaponIndex);
+		currentWeapon.weaponSelectionSprite.setVisible(true);
 	}
 	
 	public ArrayList<ProjectileWeapon> getAvailableWeapons() {
@@ -313,7 +317,6 @@ public class Ship implements AetherFlamesConstants
 	
 	void setUpWeapons()
 	{
-		//ProjectileWeapon pb = new NyanCannon();
 		availableWeapons.add(new PlasmaBlaster());
 		availableWeapons.add(new Nyannon());
 		currentWeapon = availableWeapons.get(0);
@@ -338,6 +341,10 @@ public class Ship implements AetherFlamesConstants
 		clientGameManager = pCGM;
 		availableWeapons = new ArrayList<ProjectileWeapon>();
 		setUpWeapons();
+		if(color == AetherFlamesActivity.myShipColor)
+		{
+			currentWeapon.weaponSelectionSprite.setVisible(true);
+		}
 		
 		//set up physical ship
 		this.sprite = new TiledSprite(-20, -20, SHIP_SIZE, SHIP_SIZE, AetherFlamesActivity.mShipTextureRegion, AetherFlamesActivity.mVertexBufferObjectManager);

@@ -90,6 +90,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 
 	protected static final float SHIP_START_PADDING = 1.25f;
 	protected static final float HEALTH_CRATE_START_PADDING = 3f;
+	protected static final int WEAPON_SELECTION_BOX_SIZE = 128;
 	
 
 	// ===========================================================
@@ -118,8 +119,14 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	protected static BitmapTextureAtlas mPlasmaSphereTexture; 
 	protected static TiledTextureRegion mPlasmaSphereTextureRegion;
 
+	protected static BitmapTextureAtlas mPlasmaBlasterWeaponTexture; 
+	protected static ITextureRegion mPlasmaBlasterWeaponTextureRegion;
+
 	protected static BitmapTextureAtlas mNyanTexture; 
 	protected static TiledTextureRegion mNyanTextureRegion; 
+
+	protected static BitmapTextureAtlas mNyannonWeaponTexture;
+	protected static ITextureRegion mNyannonWeaponTextureRegion; 
 
 	protected static BitmapTextureAtlas mControlStickTexture;
 	protected static ITextureRegion mControlStickBaseTextureRegion;
@@ -128,12 +135,16 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	protected static BitmapTextureAtlas mButtonsTexture;
 	protected static ITextureRegion mButtonsBaseTextureRegion;
 	protected static ITextureRegion mButtonsKnobTextureRegion;
+
+	protected static BitmapTextureAtlas mWeaponSelectionTexture;
+	protected static ITextureRegion mWeaponSelectionTextureRegion;
 	
 	private CollisionHandler mCollisionHandler;
 	private SceneUpdateHandler mSceneUpdateHandler;
 	
 	private AnalogOnScreenControl mControlStick;
 	private DigitalOnScreenControl mButtons;
+	protected static Sprite mWeaponSelection;
 	
 	public static Map<Integer, Ship> ships;
 	
@@ -190,11 +201,15 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		AetherFlamesActivity.mControlStickBaseTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mControlStickTexture, this, "onscreen_control_base.png", 0, 0);
 		AetherFlamesActivity.mControlStickKnobTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mControlStickTexture, this, "onscreen_control_knob.png", 128, 0);
 		AetherFlamesActivity.mControlStickTexture.load();
-		
-		AetherFlamesActivity.mButtonsTexture = new BitmapTextureAtlas(this.getTextureManager(), 256, 128, TextureOptions.BILINEAR);
+
+		AetherFlamesActivity.mButtonsTexture = new BitmapTextureAtlas(this.getTextureManager(), 1024, 512, TextureOptions.BILINEAR);
 		AetherFlamesActivity.mButtonsBaseTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mButtonsTexture, this, "Buttons.png", 0, 0);
-		AetherFlamesActivity.mButtonsKnobTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mButtonsTexture, this, "Empty.png", 128, 0);
+		AetherFlamesActivity.mButtonsKnobTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mButtonsTexture, this, "Empty.png", 512, 0);
 		AetherFlamesActivity.mButtonsTexture.load();
+
+		AetherFlamesActivity.mWeaponSelectionTexture = new BitmapTextureAtlas(this.getTextureManager(), 512, 512, TextureOptions.BILINEAR);
+		AetherFlamesActivity.mWeaponSelectionTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mWeaponSelectionTexture, this, "WeaponIndicatorBox.png", 0, 0);
+		AetherFlamesActivity.mWeaponSelectionTexture.load();
 
 		AetherFlamesActivity.mHealthCrateTexture = new BitmapTextureAtlas(this.getTextureManager(), 128, 128, TextureOptions.BILINEAR);
 		AetherFlamesActivity.mHealthCrateTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mHealthCrateTexture, this, "healthCrate.png", 0, 0);
@@ -204,9 +219,17 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		AetherFlamesActivity.mPlasmaSphereTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(AetherFlamesActivity.mPlasmaSphereTexture, this, "PlasmaSphere.png", 0, 0, 4, 1);
 		AetherFlamesActivity.mPlasmaSphereTexture.load();
 		
+		AetherFlamesActivity.mPlasmaBlasterWeaponTexture = new BitmapTextureAtlas(this.getTextureManager(), 512, 512, TextureOptions.BILINEAR);
+		AetherFlamesActivity.mPlasmaBlasterWeaponTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mPlasmaBlasterWeaponTexture, this, "PlasmaBlaster.png", 0, 0);
+		AetherFlamesActivity.mPlasmaBlasterWeaponTexture.load();
+		
 		AetherFlamesActivity.mNyanTexture = new BitmapTextureAtlas(this.getTextureManager(), 1200, 100, TextureOptions.BILINEAR);
 		AetherFlamesActivity.mNyanTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(AetherFlamesActivity.mNyanTexture, this, "nyanlinelow.png", 0, 0, 12, 1);
 		AetherFlamesActivity.mNyanTexture.load();
+		
+		AetherFlamesActivity.mNyannonWeaponTexture = new BitmapTextureAtlas(this.getTextureManager(), 512, 512, TextureOptions.BILINEAR);
+		AetherFlamesActivity.mNyannonWeaponTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mNyannonWeaponTexture, this, "Nyannon.png", 0, 0);
+		AetherFlamesActivity.mNyannonWeaponTexture.load();
 
 		AetherFlamesActivity.mFont = FontFactory.create(this.getFontManager(), this.getTextureManager(), 256, 256, 30, true, Color.WHITE);
 		AetherFlamesActivity.mFont.load();
@@ -233,13 +256,9 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		ships = new ConcurrentHashMap<Integer,Ship>();
 		
 		this.initBattlefield();
+		this.initWeaponSelection();
 		this.initShips();
-		this.initOnScreenControls();
-		
-		//AnimatedSprite nyan = new AnimatedSprite(100, 100, AetherFlamesActivity.mNyanTextureRegion, AetherFlamesActivity.mVertexBufferObjectManager);
-		//nyan.animate(70);
-		//nyan.setScale(0.5f, 0.5f);
-		//AetherFlamesActivity.mScene.attachChild(nyan);
+		this.initHUD();
 		
 		AetherFlamesActivity.mScene.registerUpdateHandler(this.mSceneUpdateHandler);
 		
@@ -439,7 +458,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		});
 	}
 	
-	private void initOnScreenControls()
+	private void initHUD()
 	{		
 		this.mControlStick = new AnalogOnScreenControl(0, CAMERA_HEIGHT - AetherFlamesActivity.mControlStickBaseTextureRegion.getHeight(), AetherFlamesActivity.mCamera, AetherFlamesActivity.mControlStickBaseTextureRegion, AetherFlamesActivity.mControlStickKnobTextureRegion, 0.1f, this.getVertexBufferObjectManager(), new ShipMovementControlListener(ships.get(AetherFlamesActivity.myShipColor), AetherFlamesActivity.mClientGameManager));
 		this.mControlStick.getControlBase().setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
@@ -448,23 +467,28 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		this.mControlStick.getControlBase().setScale(1.5f);
 		this.mControlStick.getControlKnob().setScale(1.5f);
 		this.mControlStick.refreshControlKnobPosition();
-
 		AetherFlamesActivity.mScene.setChildScene(this.mControlStick);
 		
 		this.mButtons = new DigitalOnScreenControl(CAMERA_WIDTH - AetherFlamesActivity.mButtonsBaseTextureRegion.getWidth(), CAMERA_HEIGHT - AetherFlamesActivity.mButtonsBaseTextureRegion.getHeight(), AetherFlamesActivity.mCamera, AetherFlamesActivity.mButtonsBaseTextureRegion, AetherFlamesActivity.mButtonsKnobTextureRegion, 0.1f, this.getVertexBufferObjectManager(), new ButtonControlListener(ships.get(AetherFlamesActivity.myShipColor)));
 		this.mButtons.getControlBase().setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 		this.mButtons.getControlBase().setAlpha(0.5f);
-		this.mButtons.getControlBase().setScaleCenter(128, 128);
-		this.mButtons.getControlBase().setScale(1.5f);
-		this.mButtons.getControlKnob().setScale(1.5f);
+		this.mButtons.getControlBase().setScaleCenter(512, 512);
+		this.mButtons.getControlBase().setScale(0.375f);
+		this.mButtons.getControlKnob().setScale(0.375f);
 		this.mButtons.refreshControlKnobPosition();
-
 		this.mControlStick.setChildScene(this.mButtons);
 	}
-
-	private void initShips()
+	
+	private void initWeaponSelection()
 	{		
-		AetherFlamesActivity.myShipColor = Ship.BLUE_SHIP; //TODO: set this on game configuration using network
+		AetherFlamesActivity.mWeaponSelection = new Sprite(AetherFlamesActivity.CAMERA_WIDTH - AetherFlamesActivity.WEAPON_SELECTION_BOX_SIZE, 0, AetherFlamesActivity.WEAPON_SELECTION_BOX_SIZE, AetherFlamesActivity.WEAPON_SELECTION_BOX_SIZE, AetherFlamesActivity.mWeaponSelectionTextureRegion, AetherFlamesActivity.mVertexBufferObjectManager);
+		AetherFlamesActivity.mWeaponSelection.setAlpha(0.5f);
+		AetherFlamesActivity.mScene.attachChild(AetherFlamesActivity.mWeaponSelection);
+	}
+ 
+	private void initShips()
+	{
+		AetherFlamesActivity.myShipColor = Ship.GREEN_SHIP; //TODO: set this on game configuration using network
 
 		ships.put(Ship.WHITE_SHIP, new Ship(SHIP_START_PADDING, SHIP_START_PADDING, -45.0f, Ship.WHITE_SHIP, mClientGameManager));
 		ships.put(Ship.RED_SHIP, new Ship(WORLD_WIDTH/2, SHIP_START_PADDING, 0.0f, Ship.RED_SHIP, mClientGameManager));
