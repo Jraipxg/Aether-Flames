@@ -127,6 +127,9 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 
 	protected static BitmapTextureAtlas mNyannonWeaponTexture;
 	protected static ITextureRegion mNyannonWeaponTextureRegion; 
+	
+	protected static BitmapTextureAtlas mExplosionTexture;
+	protected static ITextureRegion mExplosionTextureRegion; 
 
 	protected static BitmapTextureAtlas mControlStickTexture;
 	protected static ITextureRegion mControlStickBaseTextureRegion;
@@ -230,7 +233,11 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		AetherFlamesActivity.mNyannonWeaponTexture = new BitmapTextureAtlas(this.getTextureManager(), 512, 512, TextureOptions.BILINEAR);
 		AetherFlamesActivity.mNyannonWeaponTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mNyannonWeaponTexture, this, "Nyannon.png", 0, 0);
 		AetherFlamesActivity.mNyannonWeaponTexture.load();
-
+		
+		AetherFlamesActivity.mExplosionTexture = new BitmapTextureAtlas(this.getTextureManager(), 128, 128, TextureOptions.BILINEAR);
+		AetherFlamesActivity.mExplosionTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mExplosionTexture, this, "Explosion.png", 0, 0);
+		AetherFlamesActivity.mExplosionTexture.load();
+		
 		AetherFlamesActivity.mFont = FontFactory.create(this.getFontManager(), this.getTextureManager(), 256, 256, 30, true, Color.WHITE);
 		AetherFlamesActivity.mFont.load();
 	}

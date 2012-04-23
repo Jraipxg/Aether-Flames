@@ -128,6 +128,7 @@ public class Ship implements AetherFlamesConstants
 		AetherFlamesActivity.mScene.detachChild(energyBarBackground);
 		AetherFlamesActivity.ships.remove(id);
 		clientGameManager.removeShip(id);
+		CollisionHandler.drawExplosion(body.getWorldCenter().cpy().mul(AetherFlamesActivity.WORLD_TO_CAMERA), SHIP_SIZE*2*AetherFlamesActivity.CAMERA_TO_WORLD);
 	}
 	
 	public void damage(int amount)

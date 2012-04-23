@@ -20,6 +20,7 @@ public class PlasmaBlaster extends ProjectileWeapon
 		weaponSelectionSprite.setAlpha(0.5f);
 		weaponSelectionSprite.setVisible(false);
 		AetherFlamesActivity.mWeaponSelection.attachChild(weaponSelectionSprite);
+		explosion = AetherFlamesActivity.mExplosionTextureRegion;
 		
 		name = "PlasmaSphere";
 		type = PLASMA_BLASTER;

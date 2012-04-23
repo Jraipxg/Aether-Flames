@@ -13,9 +13,10 @@ import com.badlogic.gdx.physics.box2d.Body;
 
 public class SceneUpdateHandler implements IUpdateHandler
 {
-	final long timeBetweenHealthDrops = 1000; //ms
-	
+	final long timeBetweenExplosionCleanup = 350;//ms
+
 	long timeOfLastHealthDrop;
+	long timeOfLastExplosionCleanup;
 	
 	public SceneUpdateHandler()
 	{
@@ -75,6 +76,17 @@ public class SceneUpdateHandler implements IUpdateHandler
 			float spawnY = (float)(Math.random()*AetherFlamesActivity.WORLD_HEIGHT*0.8 + AetherFlamesActivity.WORLD_HEIGHT*0.1f);
 			HealthCrate.spawn(spawnX, spawnY);
 			timeOfLastHealthDrop = System.currentTimeMillis();
+		}
+		
+		long timeSinceLastExplosionCleanup = System.currentTimeMillis() - timeOfLastExplosionCleanup;
+		if(timeSinceLastExplosionCleanup > timeBetweenExplosionCleanup)
+		{
+			for(int i = 0; i < CollisionHandler.explosionSpriteList.size(); i++)
+			{
+				AetherFlamesActivity.mScene.detachChild(CollisionHandler.explosionSpriteList.get(i));
+			}
+			CollisionHandler.explosionSpriteList.clear();
+			timeOfLastExplosionCleanup = System.currentTimeMillis();
 		}
 	}
 
