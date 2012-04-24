@@ -94,7 +94,7 @@ public class GameStateClientMessage extends ClientMessage implements AetherFlame
 	
 	@Override
 	public short getFlag() {
-		return FLAG_MESSAGE_SERVER_SHIP_UPDATE;
+		return FLAG_MESSAGE_SERVER_GAME_STATE;
 	}
 
 	@Override

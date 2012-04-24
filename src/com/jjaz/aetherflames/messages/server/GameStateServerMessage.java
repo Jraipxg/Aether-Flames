@@ -7,6 +7,7 @@ import java.io.IOException;
 import org.andengine.extension.multiplayer.protocol.adt.message.server.ServerMessage;
 
 import com.jjaz.aetherflames.AetherFlamesConstants;
+import com.jjaz.aetherflames.messages.client.GameStateClientMessage;
 
 public class GameStateServerMessage extends ServerMessage implements AetherFlamesConstants {
 	
@@ -92,9 +93,27 @@ public class GameStateServerMessage extends ServerMessage implements AetherFlame
 		this.mBulletVelocityY = velY;
 	}
 	
+	public void setFromClientMessage(GameStateClientMessage message) {
+		this.mShipID = message.mShipID;
+		this.mHealth = message.mHealth;
+		this.mEnergy = message.mEnergy;
+		this.mShieldActive = message.mShieldActive;
+		this.mOrientation = message.mOrientation;
+		this.mAngularVelocity = message.mAngularVelocity;
+		this.mShipPosX = message.mShipPosX;
+		this.mShipPosY = message.mShipPosY;		
+		this.mShipVelocityX = message.mShipVelocityX;
+		this.mShipVelocityY = message.mShipVelocityY;
+		this.mBulletID = message.mBulletID;
+		this.mBulletPosX = message.mBulletPosX;
+		this.mBulletPosY = message.mBulletPosY;		
+		this.mBulletVelocityX = message.mBulletVelocityX;
+		this.mBulletVelocityY = message.mBulletVelocityY;
+	}
+	
 	@Override
 	public short getFlag() {
-		return FLAG_MESSAGE_SERVER_SHIP_UPDATE;
+		return FLAG_MESSAGE_SERVER_GAME_STATE;
 	}
 
 	@Override
