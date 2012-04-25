@@ -159,7 +159,6 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	private String mServerIP = LOCALHOST_IP;
 	private SocketServer<SocketConnectionClientConnector> mSocketServer;
 	private ServerConnector<SocketConnection> mServerConnector;
-	public static ClientGameManager mClientGameManager;
 
 	private final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
 
@@ -172,8 +171,6 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		AetherFlamesActivity.mCamera = new Camera(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT);
 		final EngineOptions engineOptions = new EngineOptions(true, ScreenOrientation.LANDSCAPE_FIXED, new RatioResolutionPolicy(CAMERA_WIDTH, CAMERA_HEIGHT), AetherFlamesActivity.mCamera);
 		engineOptions.getTouchOptions().setNeedsMultiTouch(true);
-
-		AetherFlamesActivity.mClientGameManager = new ClientGameManager();
 		
 		if (WhyIsItDoingItTwice == 0) {
 			this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
@@ -252,13 +249,11 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		AetherFlamesActivity.mScene.setBackground(new Background(0, 0, 0));
 		
 		AetherFlamesActivity.mVertexBufferObjectManager = this.getVertexBufferObjectManager();
-		AetherFlamesActivity.mPhysicsWorld = new DistributedFixedStepPhysicsWorld(30, new Vector2(0, 0), false, 8, 1, AetherFlamesActivity.mClientGameManager);
+		AetherFlamesActivity.mPhysicsWorld = new DistributedFixedStepPhysicsWorld(30, new Vector2(0, 0), false, 8, 1);
 
 		this.mCollisionHandler = new CollisionHandler();
 		this.mSceneUpdateHandler = new SceneUpdateHandler();
 		AetherFlamesActivity.mPhysicsWorld.setContactListener(mCollisionHandler);
-		
-		AetherFlamesActivity.mClientGameManager.setPhysicsWorld(AetherFlamesActivity.mPhysicsWorld);
 		
 		ships = new ConcurrentHashMap<Integer,Ship>();
 		
@@ -443,8 +438,8 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 				}
 			});
 			
-			AetherFlamesActivity.mClientGameManager.setServerConnector(this.mServerConnector);
-
+			AetherFlamesActivity.mPhysicsWorld.setServerConnector(this.mServerConnector);
+			
 			this.mServerConnector.getConnection().start();
 		} catch (final Throwable t) {
 			Debug.e(t);
@@ -467,7 +462,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	
 	private void initHUD()
 	{		
-		this.mControlStick = new AnalogOnScreenControl(0, CAMERA_HEIGHT - AetherFlamesActivity.mControlStickBaseTextureRegion.getHeight(), AetherFlamesActivity.mCamera, AetherFlamesActivity.mControlStickBaseTextureRegion, AetherFlamesActivity.mControlStickKnobTextureRegion, 0.1f, this.getVertexBufferObjectManager(), new ShipMovementControlListener(ships.get(AetherFlamesActivity.myShipColor), AetherFlamesActivity.mClientGameManager));
+		this.mControlStick = new AnalogOnScreenControl(0, CAMERA_HEIGHT - AetherFlamesActivity.mControlStickBaseTextureRegion.getHeight(), AetherFlamesActivity.mCamera, AetherFlamesActivity.mControlStickBaseTextureRegion, AetherFlamesActivity.mControlStickKnobTextureRegion, 0.1f, this.getVertexBufferObjectManager(), new ShipMovementControlListener(ships.get(AetherFlamesActivity.myShipColor)));
 		this.mControlStick.getControlBase().setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 		this.mControlStick.getControlBase().setAlpha(0.5f);
 		this.mControlStick.getControlBase().setScaleCenter(0, 128);
@@ -497,19 +492,19 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	{
 		AetherFlamesActivity.myShipColor = Ship.GREEN_SHIP; //TODO: set this on game configuration using network
 
-		ships.put(Ship.WHITE_SHIP, new Ship(SHIP_START_PADDING, SHIP_START_PADDING, -45.0f, Ship.WHITE_SHIP, mClientGameManager));
-		ships.put(Ship.RED_SHIP, new Ship(WORLD_WIDTH/2, SHIP_START_PADDING, 0.0f, Ship.RED_SHIP, mClientGameManager));
-		ships.put(Ship.ORANGE_SHIP, new Ship(WORLD_WIDTH - SHIP_START_PADDING, SHIP_START_PADDING, 45.0f, Ship.ORANGE_SHIP, mClientGameManager));
+		ships.put(Ship.WHITE_SHIP, new Ship(SHIP_START_PADDING, SHIP_START_PADDING, -45.0f, Ship.WHITE_SHIP));
+		ships.put(Ship.RED_SHIP, new Ship(WORLD_WIDTH/2, SHIP_START_PADDING, 0.0f, Ship.RED_SHIP));
+		ships.put(Ship.ORANGE_SHIP, new Ship(WORLD_WIDTH - SHIP_START_PADDING, SHIP_START_PADDING, 45.0f, Ship.ORANGE_SHIP));
 		
-		ships.put(Ship.YELLOW_SHIP, new Ship(SHIP_START_PADDING, WORLD_HEIGHT/2, -90.0f, Ship.YELLOW_SHIP, mClientGameManager));
-		ships.put(Ship.GREEN_SHIP, new Ship(WORLD_WIDTH - SHIP_START_PADDING, WORLD_HEIGHT/2, 90.0f, Ship.GREEN_SHIP, mClientGameManager));
+		ships.put(Ship.YELLOW_SHIP, new Ship(SHIP_START_PADDING, WORLD_HEIGHT/2, -90.0f, Ship.YELLOW_SHIP));
+		ships.put(Ship.GREEN_SHIP, new Ship(WORLD_WIDTH - SHIP_START_PADDING, WORLD_HEIGHT/2, 90.0f, Ship.GREEN_SHIP));
 		
-		ships.put(Ship.BLUE_SHIP, new Ship(SHIP_START_PADDING, WORLD_HEIGHT - SHIP_START_PADDING, -135.0f, Ship.BLUE_SHIP, mClientGameManager));
-		ships.put(Ship.PURPLE_SHIP, new Ship(WORLD_WIDTH/2, WORLD_HEIGHT - SHIP_START_PADDING, 180.0f, Ship.PURPLE_SHIP, mClientGameManager));
-		ships.put(Ship.BLACK_SHIP, new Ship(WORLD_WIDTH - SHIP_START_PADDING, WORLD_HEIGHT - SHIP_START_PADDING, 135.0f, Ship.BLACK_SHIP, mClientGameManager));
+		ships.put(Ship.BLUE_SHIP, new Ship(SHIP_START_PADDING, WORLD_HEIGHT - SHIP_START_PADDING, -135.0f, Ship.BLUE_SHIP));
+		ships.put(Ship.PURPLE_SHIP, new Ship(WORLD_WIDTH/2, WORLD_HEIGHT - SHIP_START_PADDING, 180.0f, Ship.PURPLE_SHIP));
+		ships.put(Ship.BLACK_SHIP, new Ship(WORLD_WIDTH - SHIP_START_PADDING, WORLD_HEIGHT - SHIP_START_PADDING, 135.0f, Ship.BLACK_SHIP));
 		
-		AetherFlamesActivity.mClientGameManager.setID(AetherFlamesActivity.myShipColor);
-		AetherFlamesActivity.mClientGameManager.setShips(ships);
+		AetherFlamesActivity.mPhysicsWorld.setID(AetherFlamesActivity.myShipColor);
+		AetherFlamesActivity.mPhysicsWorld.setShips(ships);
 	}
 
 	private void initBattlefield()

@@ -7,6 +7,7 @@ import java.io.IOException;
 import org.andengine.extension.multiplayer.protocol.adt.message.client.ClientMessage;
 
 import com.jjaz.aetherflames.AetherFlamesConstants;
+import com.jjaz.aetherflames.Ship;
 
 public class GameStateClientMessage extends ClientMessage implements AetherFlamesConstants {
 	
@@ -24,6 +25,8 @@ public class GameStateClientMessage extends ClientMessage implements AetherFlame
 	
 	// bullet data
 	public int mBulletID;
+	public int mBulletType;
+	public float mBulletAngle;
 	public float mBulletPosX, mBulletPosY;
 	public float mBulletVelocityX, mBulletVelocityY;
 	
@@ -43,34 +46,26 @@ public class GameStateClientMessage extends ClientMessage implements AetherFlame
 		this.mFrameNum = frameNum;
 	}
 	
+	public void setFrameNumber(int num) {
+		this.mFrameNum = num;
+	}
+	
 	/**
 	 * Setter.
 	 * 
-	 * @param sID Ship id.
-	 * @param health Ship health.
-	 * @param energy Ship energy.
-	 * @param shieldActive Ship shield on.
-	 * @param orientation Ship orientation (angle 0-360).
-	 * @param posX Ship initial position x component.
-	 * @param posY Ship initial position y component.
-	 * @param velX Ship velocity x component.
-	 * @param velY Ship velocity y component.
+	 * @param ship The ship to report the state of
 	 */	
-	public void setShipState(final int sID, final int health,
-							 final int energy, final boolean shieldActive,
-			   			     final float orientation, final float omega,
-			   			     final float posX, final float posY,
-			   			  	 final float velX, final float velY) {
-		this.mShipID = sID;
-		this.mHealth = health;
-		this.mEnergy = energy;
-		this.mShieldActive = shieldActive;
-		this.mOrientation = orientation;
-		this.mAngularVelocity = omega;
-		this.mShipPosX = posX;
-		this.mShipPosY = posY;		
-		this.mShipVelocityX = velX;
-		this.mShipVelocityY = velY;
+	public void setShipState(final Ship s) {
+		this.mShipID = s.id;
+		this.mHealth = s.getHealth();
+		this.mEnergy = s.getEnergy();
+		this.mShieldActive = s.shieldActivated();
+		this.mOrientation = s.getAngle();
+		this.mAngularVelocity = s.getAngularVelocity();
+		this.mShipPosX = s.getPosition().x;
+		this.mShipPosY = s.getPosition().y;		
+		this.mShipVelocityX = s.getVelocity().x;
+		this.mShipVelocityY = s.getVelocity().y;
 	}
 	
 	/**
@@ -82,10 +77,12 @@ public class GameStateClientMessage extends ClientMessage implements AetherFlame
 	 * @param velX Bullet velocity x component.
 	 * @param velY Bullet velocity y component.
 	 */	
-	public void setBulletState(final int bID,
+	public void setBulletState(final int bID, final int type, final float angle,
 			   			       final float posX, final float posY,
 			   			  	   final float velX, final float velY) {
 		this.mBulletID = bID;
+		this.mBulletType = type;
+		this.mBulletAngle = angle;
 		this.mBulletPosX = posX;
 		this.mBulletPosY = posY;		
 		this.mBulletVelocityX = velX;
@@ -113,6 +110,8 @@ public class GameStateClientMessage extends ClientMessage implements AetherFlame
 		this.mShipVelocityY = pDataInputStream.readFloat();
 
 		this.mBulletID = pDataInputStream.readInt();
+		this.mBulletType = pDataInputStream.readInt();
+		this.mBulletAngle = pDataInputStream.readFloat();
 		this.mBulletPosX = pDataInputStream.readFloat();
 		this.mBulletPosY = pDataInputStream.readFloat();
 		this.mBulletVelocityX = pDataInputStream.readFloat();
@@ -135,6 +134,8 @@ public class GameStateClientMessage extends ClientMessage implements AetherFlame
 		pDataOutputStream.writeFloat(this.mShipVelocityY);
 		
 		pDataOutputStream.writeInt(this.mBulletID);
+		pDataOutputStream.writeInt(this.mBulletType);
+		pDataOutputStream.writeFloat(this.mBulletAngle);
 		pDataOutputStream.writeFloat(this.mBulletPosX);
 		pDataOutputStream.writeFloat(this.mBulletPosY);
 		pDataOutputStream.writeFloat(this.mBulletVelocityX);

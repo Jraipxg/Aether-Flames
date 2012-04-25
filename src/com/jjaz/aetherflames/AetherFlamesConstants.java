@@ -11,6 +11,13 @@ public interface AetherFlamesConstants {
 	public static final int SERVER_PORT = 4444;
 	public static final short PROTOCOL_VERSION = 1;
 	
+	/* Frame update constants */
+	public static final int FRAMES_PER_UPDATE = 2;
+	public static final int FRAMES_PER_SECOND = 30;
+	public static final int MAX_GAME_STATE_DELAY = 10;
+	public static final int MAX_BULLETS_PER_FRAME = 1;
+	public static final int FIELD_EMPTY = -1;
+	
 	/* Server --> Client */
 	public static final short FLAG_MESSAGE_SERVER_NEW_BULLET = 1;
 	public static final short FLAG_MESSAGE_SERVER_GAME_STATE = FLAG_MESSAGE_SERVER_NEW_BULLET + 1;

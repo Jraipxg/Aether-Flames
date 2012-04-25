@@ -25,6 +25,8 @@ public class GameStateServerMessage extends ServerMessage implements AetherFlame
 	
 	// bullet data
 	public int mBulletID;
+	public int mBulletType;
+	public float mBulletAngle;
 	public float mBulletPosX, mBulletPosY;
 	public float mBulletVelocityX, mBulletVelocityY;
 	
@@ -83,10 +85,12 @@ public class GameStateServerMessage extends ServerMessage implements AetherFlame
 	 * @param velX Bullet velocity x component.
 	 * @param velY Bullet velocity y component.
 	 */	
-	public void setBulletState(final int bID,
+	public void setBulletState(final int bID, final int type, final float angle,
 			   			       final float posX, final float posY,
 			   			  	   final float velX, final float velY) {
 		this.mBulletID = bID;
+		this.mBulletType = type;
+		this.mBulletAngle = angle;
 		this.mBulletPosX = posX;
 		this.mBulletPosY = posY;		
 		this.mBulletVelocityX = velX;
@@ -94,6 +98,7 @@ public class GameStateServerMessage extends ServerMessage implements AetherFlame
 	}
 	
 	public void setFromClientMessage(GameStateClientMessage message) {
+		this.mFrameNum = message.mFrameNum;
 		this.mShipID = message.mShipID;
 		this.mHealth = message.mHealth;
 		this.mEnergy = message.mEnergy;
@@ -105,6 +110,8 @@ public class GameStateServerMessage extends ServerMessage implements AetherFlame
 		this.mShipVelocityX = message.mShipVelocityX;
 		this.mShipVelocityY = message.mShipVelocityY;
 		this.mBulletID = message.mBulletID;
+		this.mBulletType = message.mBulletType;
+		this.mBulletAngle = message.mBulletAngle;
 		this.mBulletPosX = message.mBulletPosX;
 		this.mBulletPosY = message.mBulletPosY;		
 		this.mBulletVelocityX = message.mBulletVelocityX;
@@ -132,6 +139,8 @@ public class GameStateServerMessage extends ServerMessage implements AetherFlame
 		this.mShipVelocityY = pDataInputStream.readFloat();
 
 		this.mBulletID = pDataInputStream.readInt();
+		this.mBulletType = pDataInputStream.readInt();
+		this.mBulletAngle = pDataInputStream.readFloat();
 		this.mBulletPosX = pDataInputStream.readFloat();
 		this.mBulletPosY = pDataInputStream.readFloat();
 		this.mBulletVelocityX = pDataInputStream.readFloat();
@@ -154,6 +163,8 @@ public class GameStateServerMessage extends ServerMessage implements AetherFlame
 		pDataOutputStream.writeFloat(this.mShipVelocityY);
 		
 		pDataOutputStream.writeInt(this.mBulletID);
+		pDataOutputStream.writeInt(this.mBulletType);
+		pDataOutputStream.writeFloat(this.mBulletAngle);
 		pDataOutputStream.writeFloat(this.mBulletPosX);
 		pDataOutputStream.writeFloat(this.mBulletPosY);
 		pDataOutputStream.writeFloat(this.mBulletVelocityX);

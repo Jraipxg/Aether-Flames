@@ -31,6 +31,10 @@ public abstract class ProjectileWeapon implements AetherFlamesConstants
 	
 	protected Sprite weaponSelectionSprite;
 	
+	public int getType() {
+		return type;
+	}
+	
 	public void fire(Vector2 position, Vector2 initialVelocity, float angle)
 	{
 		AnimatedSprite bullet = new AnimatedSprite(-BULLET_SIZE, -BULLET_SIZE, BULLET_SIZE, BULLET_SIZE, texture, AetherFlamesActivity.mVertexBufferObjectManager);

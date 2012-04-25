@@ -10,12 +10,10 @@ import com.badlogic.gdx.math.Vector2;
 public class ShipMovementControlListener implements IOnScreenControlListener, IAnalogOnScreenControlListener
 {
 	private Ship mShip;
-	private ClientGameManager mClientGameManager;
 	
-	public ShipMovementControlListener(Ship ship, ClientGameManager pCGM)
+	public ShipMovementControlListener(Ship ship)
 	{
 		mShip = ship;
-		mClientGameManager = pCGM;
 	}
 	
 	@Override
@@ -27,8 +25,7 @@ public class ShipMovementControlListener implements IOnScreenControlListener, IA
 		
 		if(mShip != null && mShip.getHealth() > 0 && (pValueX != 0 || pValueY != 0))
 		{
-			//mShip.turnInstantAndThrust(new Vector2(pValueX, pValueY));
-			mClientGameManager.queueTurnInstantAndThrustEvent(new Vector2(pValueX, pValueY));
+			mShip.turnInstantAndThrust(new Vector2(pValueX, pValueY));
 		}
 	}
 

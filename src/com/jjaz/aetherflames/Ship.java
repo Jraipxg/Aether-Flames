@@ -63,8 +63,6 @@ public class Ship implements AetherFlamesConstants
 	private int currentWeaponIndex;
 	private ArrayList<ProjectileWeapon> availableWeapons;
 	
-	private ClientGameManager clientGameManager;
-	
 	public boolean isWithinRange(Vector2 position, float radius)
 	{
 		position.x -= body.getWorldCenter().x;
@@ -127,7 +125,7 @@ public class Ship implements AetherFlamesConstants
 		AetherFlamesActivity.mScene.detachChild(energyBar);
 		AetherFlamesActivity.mScene.detachChild(energyBarBackground);
 		AetherFlamesActivity.ships.remove(id);
-		clientGameManager.removeShip(id);
+		AetherFlamesActivity.mPhysicsWorld.removeShip(id);
 		CollisionHandler.drawExplosion(body.getWorldCenter().cpy().mul(AetherFlamesActivity.WORLD_TO_CAMERA), SHIP_SIZE*2*AetherFlamesActivity.CAMERA_TO_WORLD);
 	}
 	
@@ -169,10 +167,65 @@ public class Ship implements AetherFlamesConstants
 			hp = MAX_HP;
 		}
 	}
+
+	public int getHealth() 
+	{
+		return hp;
+	}
+	
+	public int getEnergy() 
+	{
+		return ep;
+	}
+	
+	public boolean shieldActivated()
+	{
+		return shieldsOn;
+	}
+	
+	public float getAngle()
+	{
+		return body.getAngle();
+	}
+	
+	public float getAngularVelocity()
+	{
+		return body.getAngularVelocity();
+	}
+	
+	public Vector2 getPosition() {
+		return body.getWorldCenter();
+	}
+	
+	public Vector2 getVelocity()
+	{	
+		return body.getLinearVelocity();
+	}
+	
+	public void enableShield() 
+	{
+		shieldsOn = true;
+	}
+	
+	public void disableShield() 
+	{
+		shieldsOn = false;
+	}
+	
+	public void setHealth(int health)
+	{
+		hp = health;
+	}
+	
+	public void setEnergy (int energy) 
+	{
+		ep = energy;
+	}
 	
 	public void setAngle(float angle)
 	{
 		body.setTransform(body.getPosition(), angle);
+		sprite.setRotation(MathUtils.radToDeg(body.getAngle()));
 	}
 	
 	public void setPosition(Vector2 position)
@@ -183,6 +236,15 @@ public class Ship implements AetherFlamesConstants
 	public void setVelocity(Vector2 velocity)
 	{
 		body.setLinearVelocity(velocity);
+	}
+	
+	public void applyForce(Vector2 direction)
+	{
+		Vector2 force = direction;
+		force.x *= thrust;
+		force.y *= thrust;
+		Vector2 point = body.getWorldCenter();
+		body.applyForce(force, point);
 	}
 	
 	public void fireThrusters(float magnitude)
@@ -235,8 +297,8 @@ public class Ship implements AetherFlamesConstants
 			if(ep > currentWeapon.COST && weaponIsCool())
 			{
 				ep -= currentWeapon.COST;
-				clientGameManager.queueNewBulletEvent(currentWeapon.type, body.getLinearVelocity(), barrelPosition(), body.getAngle());
-				//currentWeapon.fire(barrelPosition(), body.getLinearVelocity(), body.getAngle());
+				currentWeapon.fire(barrelPosition(), body.getLinearVelocity(), body.getAngle());
+				AetherFlamesActivity.mPhysicsWorld.registerBullet(currentWeapon.getType(), barrelPosition(), body.getLinearVelocity(), body.getAngle());
 				weaponCooldownOver = System.currentTimeMillis() + currentWeapon.COOLDOWN;
 			}
 		}
@@ -323,12 +385,7 @@ public class Ship implements AetherFlamesConstants
 		currentWeapon = availableWeapons.get(0);
 	}
 	
-	public int getHealth() 
-	{
-		return hp;
-	}
-	
-	public Ship(float x, float y, float angle, int color, ClientGameManager pCGM) //angle in degrees 0 is down, -90 is right, 90 is left
+	public Ship(float x, float y, float angle, int color) //angle in degrees 0 is down, -90 is right, 90 is left
 	{
 		//set up ship stats
 		id = color;
@@ -339,7 +396,6 @@ public class Ship implements AetherFlamesConstants
 		weaponCooldownOver = System.currentTimeMillis();
 		setUpBars();
 		//currentWeapon = new PlasmaBlaster();
-		clientGameManager = pCGM;
 		availableWeapons = new ArrayList<ProjectileWeapon>();
 		setUpWeapons();
 		if(color == AetherFlamesActivity.myShipColor)
