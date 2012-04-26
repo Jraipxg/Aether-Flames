@@ -109,7 +109,8 @@ public class AetherFlamesServer extends
 					newBulletServerMessage.setNewBullet(newBulletClientMessage.mShipID, newBulletClientMessage.mBulletID, newBulletClientMessage.mBulletType,
 														newBulletClientMessage.mVelocityX, newBulletClientMessage.mVelocityY,
 														newBulletClientMessage.mPosX, newBulletClientMessage.mPosY, newBulletClientMessage.mAngle);
-					messages.addLast(newBulletServerMessage);
+					AetherFlamesServer.this.sendBroadcastServerMessage(newBulletServerMessage); // broadcast
+					AetherFlamesServer.this.mMessagePool.recycleMessage(newBulletServerMessage);
 				}
 			}
 		});
@@ -137,7 +138,8 @@ public class AetherFlamesServer extends
 					final CollisionClientMessage collisionClientMessage = (CollisionClientMessage)pClientMessage;
 					final CollisionServerMessage collisionServerMessage = (CollisionServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_COLLISION);
 					collisionServerMessage.setCollision(collisionClientMessage.mShipID, collisionClientMessage.mBulletID);
-					messages.addLast(collisionServerMessage);
+					AetherFlamesServer.this.sendBroadcastServerMessage(collisionServerMessage); // broadcast
+					AetherFlamesServer.this.mMessagePool.recycleMessage(collisionServerMessage);
 				}
 			}
 		});
