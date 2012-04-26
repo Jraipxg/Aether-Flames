@@ -35,7 +35,7 @@ public abstract class ProjectileWeapon implements AetherFlamesConstants
 		return type;
 	}
 	
-	public void fire(Vector2 position, Vector2 initialVelocity, float angle)
+	public Body fire(int id, Vector2 position, Vector2 initialVelocity, float angle)
 	{
 		AnimatedSprite bullet = new AnimatedSprite(-BULLET_SIZE, -BULLET_SIZE, BULLET_SIZE, BULLET_SIZE, texture, AetherFlamesActivity.mVertexBufferObjectManager);
 		bullet.animate(70);
@@ -57,9 +57,11 @@ public abstract class ProjectileWeapon implements AetherFlamesConstants
 		}
 		bullet.setRotation(MathUtils.radToDeg(launchAngle));
 
-		bulletBody.setUserData("projectile " + name  + " " + DAMAGE  + " " + BLAST_RADIUS);
+		bulletBody.setUserData("projectile " + name  + " " + DAMAGE  + " " + BLAST_RADIUS + " " + id);
 		
 		AetherFlamesActivity.mPhysicsWorld.registerPhysicsConnector(new PhysicsConnector(bullet, bulletBody, true, true));
 		AetherFlamesActivity.mScene.attachChild(bullet);
+		
+		return bulletBody;
 	}
 }

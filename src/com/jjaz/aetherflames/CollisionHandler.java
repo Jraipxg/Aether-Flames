@@ -36,18 +36,19 @@ public class CollisionHandler implements ContactListener
 		explosionSprite.setRotation(explosionAngle);
 	}
 	
-	void explode(Body body, int damage, float blastRadius)
+	void explode(Body body, int damage, float blastRadius, int bulletID)
 	{
 		//draw explosion image
 		CollisionHandler.drawExplosion(body.getWorldCenter().cpy().mul(AetherFlamesActivity.WORLD_TO_CAMERA), blastRadius);
 		
-		//deal damage
+		//deal damage if the ship is my ship
 		for (Map.Entry<Integer,Ship> shipEntry : AetherFlamesActivity.ships.entrySet()) 
 		{
 			Ship ship = shipEntry.getValue();
-			if(ship.isWithinRange(body.getWorldCenter(), blastRadius))
+			if(ship.id == AetherFlamesActivity.myShipColor && ship.isWithinRange(body.getWorldCenter(), blastRadius))
 			{
 				ship.damage(damage);
+				AetherFlamesActivity.mPhysicsWorld.registerCollision(bulletID, ship.id);
 			}
 		}
 		
@@ -81,7 +82,8 @@ public class CollisionHandler implements ContactListener
 			{
 				int damage = Integer.parseInt(tokensA[2]);
 				float blastRadius = Float.parseFloat(tokensA[3]);
-				explode(bodyA, damage, blastRadius);
+				int id = Integer.parseInt(tokensA[4]);
+				explode(bodyA, damage, blastRadius, id);
 			}
 		}
 		
@@ -91,7 +93,8 @@ public class CollisionHandler implements ContactListener
 			{
 				int damage = Integer.parseInt(tokensB[2]);
 				float blastRadius = Float.parseFloat(tokensB[3]);
-				explode(bodyB, damage, blastRadius);
+				int id = Integer.parseInt(tokensA[4]);
+				explode(bodyB, damage, blastRadius, id);
 			}
 		}
 		

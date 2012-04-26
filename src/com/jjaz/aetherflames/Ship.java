@@ -202,16 +202,6 @@ public class Ship implements AetherFlamesConstants
 		return body.getLinearVelocity();
 	}
 	
-	public void enableShield() 
-	{
-		shieldsOn = true;
-	}
-	
-	public void disableShield() 
-	{
-		shieldsOn = false;
-	}
-	
 	public void setHealth(int health)
 	{
 		hp = health;
@@ -296,9 +286,11 @@ public class Ship implements AetherFlamesConstants
 		{
 			if(ep > currentWeapon.COST && weaponIsCool())
 			{
+				int bulletID = AetherFlamesActivity.mPhysicsWorld.nextBulletID();
 				ep -= currentWeapon.COST;
-				currentWeapon.fire(barrelPosition(), body.getLinearVelocity(), body.getAngle());
-				AetherFlamesActivity.mPhysicsWorld.registerBullet(currentWeapon.getType(), barrelPosition(), body.getLinearVelocity(), body.getAngle());
+				Body bulletBody = currentWeapon.fire(bulletID, barrelPosition(), body.getLinearVelocity(), body.getAngle());
+				AetherFlamesActivity.mPhysicsWorld.registerBullet(bulletID, currentWeapon.getType(), bulletBody,
+						barrelPosition(), body.getLinearVelocity(), body.getAngle());
 				weaponCooldownOver = System.currentTimeMillis() + currentWeapon.COOLDOWN;
 			}
 		}

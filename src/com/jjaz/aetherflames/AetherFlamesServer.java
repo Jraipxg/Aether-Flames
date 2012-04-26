@@ -107,7 +107,7 @@ public class AetherFlamesServer extends
 					final NewBulletClientMessage newBulletClientMessage = (NewBulletClientMessage)pClientMessage;
 					final NewBulletServerMessage newBulletServerMessage = (NewBulletServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_NEW_BULLET);
 					newBulletServerMessage.setNewBullet(newBulletClientMessage.mShipID, newBulletClientMessage.mBulletID, newBulletClientMessage.mBulletType,
-														newBulletClientMessage.mVectorX, newBulletClientMessage.mVectorY,
+														newBulletClientMessage.mVelocityX, newBulletClientMessage.mVelocityY,
 														newBulletClientMessage.mPosX, newBulletClientMessage.mPosY, newBulletClientMessage.mAngle);
 					messages.addLast(newBulletServerMessage);
 				}

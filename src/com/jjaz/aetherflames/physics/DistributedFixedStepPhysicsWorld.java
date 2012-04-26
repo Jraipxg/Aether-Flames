@@ -2,6 +2,7 @@ package com.jjaz.aetherflames.physics;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.andengine.extension.multiplayer.protocol.adt.message.IMessage;
@@ -14,21 +15,24 @@ import org.andengine.extension.physics.box2d.FixedStepPhysicsWorld;
 import org.andengine.util.debug.Debug;
 
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
-import com.jjaz.aetherflames.AetherFlamesActivity;
 import com.jjaz.aetherflames.AetherFlamesConstants;
 import com.jjaz.aetherflames.ProjectileWeapon;
 import com.jjaz.aetherflames.Ship;
+import com.jjaz.aetherflames.messages.client.CollisionClientMessage;
 import com.jjaz.aetherflames.messages.client.GameStateClientMessage;
-import com.jjaz.aetherflames.messages.client.ShipUpdateClientMessage;
+import com.jjaz.aetherflames.messages.client.NewBulletClientMessage;
+import com.jjaz.aetherflames.messages.server.CollisionServerMessage;
 import com.jjaz.aetherflames.messages.server.GameStateServerMessage;
+import com.jjaz.aetherflames.messages.server.NewBulletServerMessage;
 
 public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld implements AetherFlamesConstants {
 	
 	// Game state variables
 	private int mID;
 	private Map<Integer, Ship> mShips;
-	private ArrayList<Bullet> mBullets;
+	private Map<Integer, Body> mBullets;
 	private int mNextBulletID;
 	
 	// Frame rate variables
@@ -43,8 +47,8 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	
 	public DistributedFixedStepPhysicsWorld(final int pStepsPerSecond, final Vector2 pGravity, final boolean pAllowSleep, final int pVelocityIterations, final int pPositionIterations) {
 		super(pStepsPerSecond, pGravity, pAllowSleep, pVelocityIterations, pPositionIterations);
-		this.mBullets = new ArrayList<Bullet>();
-		this.mNextBulletID = 0;
+		this.mBullets = new HashMap<Integer, Body>();
+		this.mNextBulletID = this.mID * 100000;
 		this.mMaximumStepsPerUpdate = 10;
 		this.mTimeStep = 1.0f / pStepsPerSecond;
 		this.mSecondsElapsedAccumulator = 0;
@@ -59,6 +63,8 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	 */
 	private void initMessagePool() {
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_GAME_STATE, GameStateClientMessage.class);
+		this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET, GameStateClientMessage.class);
+		this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_COLLISION, GameStateClientMessage.class);
 	}
 	
 
@@ -74,6 +80,20 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 					DistributedFixedStepPhysicsWorld.this.handleGameStateMessage(gameStateMessage);
 				}
 			});
+			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_NEW_BULLET, NewBulletServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+				@Override
+				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+					final NewBulletServerMessage newBulletMessage = (NewBulletServerMessage)pServerMessage;
+					DistributedFixedStepPhysicsWorld.this.handleNewBulletMessage(newBulletMessage);
+				}
+			});
+			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_COLLISION, CollisionServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+				@Override
+				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+					final CollisionServerMessage collisionMessage = (CollisionServerMessage)pServerMessage;
+					DistributedFixedStepPhysicsWorld.this.handleCollisionMessage(collisionMessage);
+				}
+			});
 
 		} catch (final Throwable t) {
 			Debug.e(t);
@@ -83,22 +103,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	/**
 	 * Reports the game state to the server
 	 */
-	private void reportState() {
-		Bullet latestBullet;
-		
-		if (this.mBullets.size() != 0) {
-			latestBullet = this.mBullets.get(0);
-			this.mBullets.remove(0);
-		} else {
-			// set the fields of the bullet object to empty if there was no bullet
-			latestBullet = new Bullet();
-			latestBullet.id = FIELD_EMPTY;
-			latestBullet.type = FIELD_EMPTY;
-			latestBullet.angle = FIELD_EMPTY;
-			latestBullet.position = new Vector2(FIELD_EMPTY, FIELD_EMPTY);
-			latestBullet.velocity = new Vector2(FIELD_EMPTY, FIELD_EMPTY);
-		}
-		
+	private void reportState() {		
 		Ship ship = this.mShips.get(this.mID);
 		
 		// set the message fields and send the message if the ship is still alive
@@ -106,7 +111,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 			GameStateClientMessage message = (GameStateClientMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_GAME_STATE);
 			message.setFrameNumber(this.mFrameNum);
 			message.setShipState(this.mShips.get(this.mID));
-			message.setBulletState(latestBullet.id, latestBullet.type, latestBullet.angle, latestBullet.position.x, latestBullet.position.y, latestBullet.velocity.x, latestBullet.velocity.y);
+			message.setBulletState(FIELD_EMPTY, FIELD_EMPTY, FIELD_EMPTY, FIELD_EMPTY, FIELD_EMPTY, FIELD_EMPTY, FIELD_EMPTY);
 			
 			// send the message
 			try {
@@ -151,12 +156,13 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	 * @param messageFrame The frame at which the message was sent
 	 * @param currentFrame The current frame on the local device
 	 * @param weapons The weapons of the current ship
+	 * @param bulletID ID of the fired bullet
 	 * @param type Bullet type
 	 * @param angle Angle upon creation
 	 * @param position Position upon creation
 	 * @param velocity Velocity upon creation
 	 */
-	private void createNewBullet(int messageFrame, int currentFrame, ArrayList<ProjectileWeapon> weapons, int type, float angle, Vector2 position, Vector2 velocity) {
+	private void createNewBullet(int messageFrame, int currentFrame, ArrayList<ProjectileWeapon> weapons, int bulletID, int type, float angle, Vector2 position, Vector2 velocity) {
 		int frameDiff = currentFrame - messageFrame;
 		float framePeriod = 1.0f / FRAMES_PER_SECOND;
 		float dt = frameDiff * framePeriod;
@@ -171,7 +177,10 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		if (i < weapons.size()) {
 			weapon = weapons.get(i);
 			Vector2 curPos = position.add(velocity.mul(dt));
-			weapon.fire(curPos, velocity, angle);
+			Body bulletBody = weapon.fire(bulletID, curPos, velocity, angle);
+			
+			// put bullet body reference into world map
+			this.mBullets.put(bulletID, bulletBody);
 		}
 	}
 	
@@ -191,8 +200,8 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		int shipID = message.mShipID;
 		Ship ship = this.mShips.get(shipID);
 		
-		// update the ship if it still exists
-		if (ship != null) {
+		// update the ship if it still exists and its not the local ship
+		if (ship != null && shipID != this.mID) {
 			// update physical ship parameters
 			float angle = message.mOrientation;
 			float angularVelocity = message.mAngularVelocity;
@@ -209,6 +218,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 				ship.deactivateShields();
 			}
 			
+			// TODO remove if event messages
 			// create a new bullet if there is one
 			int bulletID = message.mBulletID;
 			if (bulletID != FIELD_EMPTY) {
@@ -216,25 +226,121 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 				angle = message.mBulletAngle;
 				position = new Vector2(message.mBulletPosX, message.mBulletPosY);
 				velocity = new Vector2(message.mBulletVelocityX, message.mBulletVelocityY);
-				createNewBullet(messageFrame, currentFrame, ship.getAvailableWeapons(), type, angle, position, velocity);
+				createNewBullet(messageFrame, currentFrame, ship.getAvailableWeapons(), bulletID, type, angle, position, velocity);
 			}
 		}
 	}
 	
 	/**
-	 * Registers a new bullet to be sent to other users
+	 * Handle new bullet messages.
+	 * 
+	 * @param message The message to handle
 	 */
-	public void registerBullet(int type, Vector2 position, Vector2 velocity, float angle) {
-		Bullet b = new Bullet();
-		b.id = this.mNextBulletID;
-		b.type = type;
-		b.position = position;
-		b.velocity = velocity;
-		b.angle = angle;
+	public void handleNewBulletMessage(NewBulletServerMessage message) {
+		int messageFrame = message.mFrameNum;
+		int currentFrame = this.mFrameNum;
 		
-		if (this.mBullets.size() < MAX_BULLETS_PER_FRAME) {
-			mBullets.add(b);
-			this.mNextBulletID++;
+		if (currentFrame - messageFrame > MAX_GAME_STATE_DELAY) {
+			return;
+		}
+		
+		Ship ship = this.mShips.get(message.mShipID);
+		
+		if (ship != null) {
+			int bulletID = message.mBulletID;
+			int type = message.mBulletType;
+			float angle = message.mAngle;
+			Vector2 position = new Vector2(message.mPosX, message.mPosY);
+			Vector2 velocity = new Vector2(message.mVelocityX, message.mVelocityY);
+			createNewBullet(messageFrame, currentFrame, ship.getAvailableWeapons(), bulletID, type, angle, position, velocity);
+		}
+	}
+	/**
+	 * Handle collision messages.
+	 * Deletes the bullet object from the game, assumes that the game state
+	 * update from the sender will reflect the damage incurred.
+	 * 
+	 * @param message The message to handle
+	 */
+	public void handleCollisionMessage(CollisionServerMessage message) {
+		int bulletID = message.mBulletID;
+		int shipID = message.mShipID;
+		
+		if (shipID != this.mID) {
+			Body bulletBody = this.mBullets.get(bulletID);
+			
+			// delete the bullet if it exists
+			if (bulletBody != null) {
+				bulletBody.setUserData("delete");
+			}
+			this.mBullets.remove(bulletID);
+		}
+	}
+	
+	/**
+	 * Gets the next bullet id
+	 * 
+	 * @return Bullet ID
+	 */
+	public int nextBulletID() {
+		int id = this.mNextBulletID;
+		this.mNextBulletID++;
+		return id;
+	}
+	
+	/**
+	 * Registers a new bullet to be sent to other users
+	 * 
+	 * @param bulletID The bullet id
+	 * @param type The bullet type
+	 * @param body The bullet body
+	 * @param position The starting bullet position
+	 * @param velocity The starting velocity
+	 * @param angle The launch angle
+	 * 
+	 * @return True if successful, false otherwise
+	 */
+	public boolean registerBullet(int bulletID, int type, Body body, Vector2 position, Vector2 velocity, float angle) {
+		
+		// add new bullet to table of bullet body objects
+		this.mBullets.put(bulletID, body);
+			
+		// create message
+		NewBulletClientMessage message = (NewBulletClientMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET);
+		message.setNewBullet(this.mFrameNum, this.mID, bulletID, type, velocity.x, velocity.y, position.x, position.y, angle);
+			
+		// send message
+		try {
+			this.mServerConnector.sendClientMessage(message);
+			this.mMessagePool.recycleMessage(message);
+		} catch (IOException e) {
+			Debug.e(e);
+			return false;
+		}
+			
+		return true;
+	}
+	
+	/**
+	 * Registers a new collision to be sent to other users
+	 * 
+	 * @param bulletID The bullet ID
+	 * @param shipID The ID of the sender (and affected ship)
+	 */
+	public void registerCollision(int bulletID, int shipID) {
+		// create message
+		CollisionClientMessage message = (CollisionClientMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET);
+		message.setCollision(bulletID, shipID);
+
+		// remove entry for the given bullet
+		this.mBullets.remove(bulletID);
+		
+		// send message
+		try {
+			this.mServerConnector.sendClientMessage(message);
+			this.mMessagePool.recycleMessage(message);
+		} catch (IOException e) {
+			Debug.e(e);
 		}
 	}
 	
@@ -300,12 +406,4 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		registerMessageHandlers();
 	}
 	
-	private class Bullet {
-		public int id;
-		public int type;
-		public Vector2 position;
-		public Vector2 velocity;
-		public float angle;
-	}
-
 }

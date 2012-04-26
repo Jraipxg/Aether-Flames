@@ -10,10 +10,11 @@ import com.jjaz.aetherflames.AetherFlamesConstants;
 
 public class NewBulletServerMessage extends ServerMessage implements AetherFlamesConstants {
 
+	public int mFrameNum;
 	public int mShipID;
 	public int mBulletID;
 	public int mBulletType;
-	public float mVectorX, mVectorY;
+	public float mVelocityX, mVelocityY;
 	public float mPosX, mPosY;
 	public float mAngle;
 	
@@ -27,6 +28,7 @@ public class NewBulletServerMessage extends ServerMessage implements AetherFlame
 	/**
 	 * C'tor
 	 * 
+	 * @param frameNum Frame number of send event
 	 * @param sID Ship id.
 	 * @param bID Bullet id.
 	 * @param vecX Bullet vector x component.
@@ -34,14 +36,15 @@ public class NewBulletServerMessage extends ServerMessage implements AetherFlame
 	 * @param posX Bullet initial position x component.
 	 * @param posY Bullet initial position y component.
 	 */
-	public NewBulletServerMessage(final int sID, final int bID, final int type,
-								  final float vecX, final float vecY,
+	public NewBulletServerMessage(final int frameNum, final int sID, final int bID, 
+								  final int type, final float vecX, final float vecY,
 								  final float posX, final float posY, final float angle) {
+		this.mFrameNum = frameNum;
 		this.mShipID = sID;
 		this.mBulletID = bID;
 		this.mBulletType = type;
-		this.mVectorX = vecX;
-		this.mVectorY = vecY;
+		this.mVelocityX = vecX;
+		this.mVelocityY = vecY;
 		this.mPosX = posX;
 		this.mPosY = posY;
 		this.mAngle = angle;
@@ -63,8 +66,8 @@ public class NewBulletServerMessage extends ServerMessage implements AetherFlame
 		this.mShipID = sID;
 		this.mBulletID = bID;
 		this.mBulletType = type;
-		this.mVectorX = vecX;
-		this.mVectorY = vecY;
+		this.mVelocityX = vecX;
+		this.mVelocityY = vecY;
 		this.mPosX = posX;
 		this.mPosY = posY;		
 		this.mAngle = angle;
@@ -77,11 +80,12 @@ public class NewBulletServerMessage extends ServerMessage implements AetherFlame
 
 	@Override
 	protected void onReadTransmissionData(DataInputStream pDataInputStream) throws IOException {
+		this.mFrameNum = pDataInputStream.readInt();
 		this.mShipID = pDataInputStream.readInt();
 		this.mBulletID = pDataInputStream.readInt();
 		this.mBulletType = pDataInputStream.readInt();
-		this.mVectorX = pDataInputStream.readFloat();
-		this.mVectorY = pDataInputStream.readFloat();
+		this.mVelocityX = pDataInputStream.readFloat();
+		this.mVelocityY = pDataInputStream.readFloat();
 		this.mPosX = pDataInputStream.readFloat();
 		this.mPosY = pDataInputStream.readFloat();
 		this.mAngle = pDataInputStream.readFloat();
@@ -89,15 +93,14 @@ public class NewBulletServerMessage extends ServerMessage implements AetherFlame
 
 	@Override
 	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream) throws IOException {
+		pDataOutputStream.writeInt(this.mFrameNum);
 		pDataOutputStream.writeInt(this.mShipID);
 		pDataOutputStream.writeInt(this.mBulletID);
 		pDataOutputStream.writeInt(this.mBulletType);
-		pDataOutputStream.writeFloat(this.mVectorX);
-		pDataOutputStream.writeFloat(this.mVectorY);
+		pDataOutputStream.writeFloat(this.mVelocityX);
+		pDataOutputStream.writeFloat(this.mVelocityY);
 		pDataOutputStream.writeFloat(this.mPosX);
 		pDataOutputStream.writeFloat(this.mPosY);
 		pDataOutputStream.writeFloat(this.mAngle);
-	}
-	
-	
+	}	
 }
