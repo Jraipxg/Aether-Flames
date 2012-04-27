@@ -23,7 +23,7 @@ public class ShipMovementControlListener implements IOnScreenControlListener, IA
 		//mShip.fireThrusters(pValueY);
 		//mShip.turn(pValueX);
 		
-		if(mShip != null && mShip.getHealth() > 0 && (pValueX != 0 || pValueY != 0))
+		if(AetherFlamesActivity.mGameStarted && mShip != null && mShip.getHealth() > 0 && (pValueX != 0 || pValueY != 0))
 		{
 			mShip.turnInstantAndThrust(new Vector2(pValueX, pValueY));
 		}

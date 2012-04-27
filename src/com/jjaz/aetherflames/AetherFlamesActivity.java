@@ -67,6 +67,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.jjaz.aetherflames.messages.server.ConnectionCloseServerMessage;
+import com.jjaz.aetherflames.messages.server.GameStartServerMessage;
 import com.jjaz.aetherflames.physics.DistributedFixedStepPhysicsWorld;
 
 public class AetherFlamesActivity extends SimpleBaseGameActivity implements AetherFlamesConstants
@@ -161,6 +162,8 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 
 	private final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
 
+	public static boolean mGameStarted = false;
+	
 	public static int myShipColor;
 	public static int WhyIsItDoingItTwice = 0;
 	
@@ -402,6 +405,11 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		super.onDestroy();
 	}
 	
+	private void startGame() {
+		this.mGameStarted = true;
+		this.mPhysicsWorld.startGame();
+	}
+	
 	private void initServerAndClient() {
 		this.initServer();
 
@@ -434,6 +442,13 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
 					AetherFlamesActivity.this.finish();
+				}
+			});
+			
+			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_GAME_START, GameStartServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+				@Override
+				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+					AetherFlamesActivity.this.startGame();
 				}
 			});
 			

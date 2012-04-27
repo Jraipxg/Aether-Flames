@@ -396,6 +396,10 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		this.mNextBulletID = this.mID * 1000000; // makes sure there are enough IDs
 	}
 	
+	public void startGame() {
+		this.mFrameNum = 0;
+	}
+	
 	public void setShips(Map<Integer, Ship> m) {
 		this.mShips = m;
 	}
