@@ -1,6 +1,7 @@
 package com.jjaz.aetherflames;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -22,6 +23,7 @@ import com.jjaz.aetherflames.messages.server.ShipUpdateServerMessage;
 import com.jjaz.aetherflames.messages.server.DoneServerMessage;
 import com.jjaz.aetherflames.messages.server.ConnectionEstablishedServerMessage;
 import com.jjaz.aetherflames.messages.server.ConnectionRejectedProtocolMissmatchServerMessage;
+import com.jjaz.aetherflames.messages.server.ConnectionRejectedGameStartedServerMessage;
 import org.andengine.extension.multiplayer.protocol.adt.message.IMessage;
 import org.andengine.extension.multiplayer.protocol.adt.message.client.IClientMessage;
 import org.andengine.extension.multiplayer.protocol.adt.message.server.ServerMessage;
@@ -41,6 +43,12 @@ public class AetherFlamesServer extends
 
 
 	private final MessagePool<IMessage> mMessagePool = new MessagePool<IMessage>();
+	boolean gameStarted;
+	LinkedList<ServerMessage> messages;
+	HashSet<ClientConnector<SocketConnection>> connectedPlayers;
+	int numDone; // needs to reach number of players
+	int numPlayers; // current player count
+	final int NUM_PLAYERS = 1;
 	
 	// ===========================================================
 	// Constructors
@@ -51,8 +59,10 @@ public class AetherFlamesServer extends
 
 		this.initMessagePool();
 		messages = new LinkedList<ServerMessage>();
+		connectedPlayers = new HashSet<ClientConnector<SocketConnection>>();
 		
 		numDone = 0;
+		gameStarted = false;
 
 	}		
 
@@ -78,10 +88,6 @@ public class AetherFlamesServer extends
 		// TODO Auto-generated method stub
 
 	}
-	
-	LinkedList<ServerMessage> messages;
-	int numDone; // needs to reach number of players
-	final int NUM_PLAYERS = 1;
 	
 	@Override
 	protected SocketConnectionClientConnector newClientConnector(final SocketConnection pSocketConnection) throws IOException {
@@ -147,6 +153,7 @@ public class AetherFlamesServer extends
 		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_CONNECTION_CLOSE, ConnectionCloseClientMessage.class, new IClientMessageHandler<SocketConnection>() {
 			@Override
 			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
+				connectedPlayers.remove(pClientConnector); // remove this player (if it exists) from the set of players
 				pClientConnector.terminate();
 			}
 		});
@@ -154,24 +161,44 @@ public class AetherFlamesServer extends
 		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_CONNECTION_ESTABLISH, ConnectionEstablishClientMessage.class, new IClientMessageHandler<SocketConnection>() {
 			@Override
 			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
-				final ConnectionEstablishClientMessage connectionEstablishClientMessage = (ConnectionEstablishClientMessage) pClientMessage;
-				if(connectionEstablishClientMessage.getProtocolVersion() == PROTOCOL_VERSION) {
-					final ConnectionEstablishedServerMessage connectionEstablishedServerMessage = (ConnectionEstablishedServerMessage) AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_CONNECTION_ESTABLISHED);
-					try {
-						pClientConnector.sendServerMessage(connectionEstablishedServerMessage);
-					} catch (IOException e) {
-						Debug.e(e);
+				synchronized(AetherFlamesServer.this) {
+					final ConnectionEstablishClientMessage connectionEstablishClientMessage = (ConnectionEstablishClientMessage) pClientMessage;
+					if(connectionEstablishClientMessage.getProtocolVersion() == PROTOCOL_VERSION) {
+						if (gameStarted == false && connectedPlayers.size() < 4) {
+							final ConnectionEstablishedServerMessage connectionEstablishedServerMessage = (ConnectionEstablishedServerMessage) AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_CONNECTION_ESTABLISHED);
+							try {
+								pClientConnector.sendServerMessage(connectionEstablishedServerMessage);
+							} catch (IOException e) {
+								Debug.e(e);
+							}
+							connectedPlayers.add(pClientConnector); // add this client to our known clients
+							AetherFlamesServer.this.mMessagePool.recycleMessage(connectionEstablishedServerMessage);
+							// if we reached the player count, start the game already!
+							if (connectedPlayers.size() == NUM_PLAYERS) {
+								final GameStartServerMessage gameStartServerMessage = (GameStartServerMessage) AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_GAME_START);
+								AetherFlamesServer.this.sendBroadcastServerMessage(gameStartServerMessage);
+								AetherFlamesServer.this.mMessagePool.recycleMessage(gameStartServerMessage);
+								gameStarted = true; // game has begun, no more players!
+							}
+						} else { // rejected - game started or full
+							final ConnectionRejectedGameStartedServerMessage connectionRejectedGameStartedServerMessage = (ConnectionRejectedGameStartedServerMessage) AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_CONNECTION_REJECTED_GAME_STARTED);
+							try {
+								pClientConnector.sendServerMessage(connectionRejectedGameStartedServerMessage);
+							} catch (IOException e) {
+								Debug.e(e);
+							}
+							AetherFlamesServer.this.mMessagePool.recycleMessage(connectionRejectedGameStartedServerMessage);
+						}
+					} else {
+						final ConnectionRejectedProtocolMissmatchServerMessage connectionRejectedProtocolMissmatchServerMessage = (ConnectionRejectedProtocolMissmatchServerMessage) AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_CONNECTION_REJECTED_PROTOCOL_MISSMATCH);
+						connectionRejectedProtocolMissmatchServerMessage.setProtocolVersion(PROTOCOL_VERSION);
+						try {
+							pClientConnector.sendServerMessage(connectionRejectedProtocolMissmatchServerMessage);
+						} catch (IOException e) {
+							Debug.e(e);
+						}
+						AetherFlamesServer.this.mMessagePool.recycleMessage(connectionRejectedProtocolMissmatchServerMessage);
 					}
-					AetherFlamesServer.this.mMessagePool.recycleMessage(connectionEstablishedServerMessage);
-				} else {
-					final ConnectionRejectedProtocolMissmatchServerMessage connectionRejectedProtocolMissmatchServerMessage = (ConnectionRejectedProtocolMissmatchServerMessage) AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_CONNECTION_REJECTED_PROTOCOL_MISSMATCH);
-					connectionRejectedProtocolMissmatchServerMessage.setProtocolVersion(PROTOCOL_VERSION);
-					try {
-						pClientConnector.sendServerMessage(connectionRejectedProtocolMissmatchServerMessage);
-					} catch (IOException e) {
-						Debug.e(e);
-					}
-					AetherFlamesServer.this.mMessagePool.recycleMessage(connectionRejectedProtocolMissmatchServerMessage);
 				}
 			}
 		});
