@@ -9,6 +9,7 @@ public interface AetherFlamesConstants {
 	
 	/* General networking constants */
 	public static final int SERVER_PORT = 4444;
+	public static final int MATCHMAKER_PORT = 4445;
 	public static final short PROTOCOL_VERSION = 1;
 	
 	/* State update and event message constants */
@@ -30,7 +31,6 @@ public interface AetherFlamesConstants {
 	public static final short FLAG_MESSAGE_SERVER_CONNECTION_REJECTED_PROTOCOL_MISSMATCH = FLAG_MESSAGE_SERVER_CONNECTION_ESTABLISHED + 1;
 	public static final short FLAG_MESSAGE_SERVER_CONNECTION_PONG = FLAG_MESSAGE_SERVER_CONNECTION_REJECTED_PROTOCOL_MISSMATCH + 1;
 
-	
 	/* Client --> Server */
 	public static final short FLAG_MESSAGE_CLIENT_NEW_BULLET = 1;
 	public static final short FLAG_MESSAGE_CLIENT_GAME_STATE = FLAG_MESSAGE_CLIENT_NEW_BULLET + 1;
@@ -40,4 +40,21 @@ public interface AetherFlamesConstants {
 	public static final short FLAG_MESSAGE_CLIENT_CONNECTION_CLOSE = FLAG_MESSAGE_CLIENT_DONE + 1;
 	public static final short FLAG_MESSAGE_CLIENT_CONNECTION_ESTABLISH = FLAG_MESSAGE_CLIENT_CONNECTION_CLOSE + 1;
 	public static final short FLAG_MESSAGE_CLIENT_CONNECTION_PING = FLAG_MESSAGE_CLIENT_CONNECTION_ESTABLISH + 1;
+	
+	/* Phone --> Matchmaker */
+	public static final short FLAG_MESSAGE_PHONE_CONNECTION_CLOSE = 1;
+	public static final short FLAG_MESSAGE_PHONE_CONNECTION_ESTABLISH = FLAG_MESSAGE_PHONE_CONNECTION_CLOSE + 1;
+	public static final short FLAG_MESSAGE_PHONE_START_SERVER = FLAG_MESSAGE_PHONE_CONNECTION_ESTABLISH + 1;
+	public static final short FLAG_MESSAGE_PHONE_GET_FIRST_SERVER = FLAG_MESSAGE_PHONE_START_SERVER + 1;
+	public static final short FLAG_MESSAGE_PHONE_GET_SERVER_LIST = FLAG_MESSAGE_PHONE_GET_FIRST_SERVER + 1;
+	public static final short FLAG_MESSAGE_PHONE_CURRENT_PLAYER_COUNT = FLAG_MESSAGE_PHONE_GET_SERVER_LIST + 1;
+	public static final short FLAG_MESSAGE_PHONE_GAME_START = FLAG_MESSAGE_PHONE_CURRENT_PLAYER_COUNT + 1;
+	
+	/* Matchmaker --> Phone */
+	public static final short FLAG_MESSAGE_MATCHMAKER_CONNECTION_CLOSE = 1;
+	public static final short FLAG_MESSAGE_MATCHMAKER_CONNECTION_ESTABLISH = FLAG_MESSAGE_MATCHMAKER_CONNECTION_CLOSE + 1;
+	public static final short FLAG_MESSAGE_MATCHMAKER_FREE_SERVER = FLAG_MESSAGE_MATCHMAKER_CONNECTION_ESTABLISH + 1;
+	public static final short FLAG_MESSAGE_MATCHMAKER_SERVER_LIST = FLAG_MESSAGE_MATCHMAKER_FREE_SERVER + 1;
+	
+	
 }
