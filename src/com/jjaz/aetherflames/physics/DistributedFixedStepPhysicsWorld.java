@@ -63,8 +63,8 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	 */
 	private void initMessagePool() {
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_GAME_STATE, GameStateClientMessage.class);
-		this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET, GameStateClientMessage.class);
-		this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_COLLISION, GameStateClientMessage.class);
+		this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET, NewBulletClientMessage.class);
+		this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_COLLISION, CollisionClientMessage.class);
 	}
 	
 
@@ -329,7 +329,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	 */
 	public void registerCollision(int bulletID, int shipID) {
 		// create message
-		CollisionClientMessage message = (CollisionClientMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET);
+		CollisionClientMessage message = (CollisionClientMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_COLLISION);
 		message.setCollision(bulletID, shipID);
 
 		// remove entry for the given bullet
