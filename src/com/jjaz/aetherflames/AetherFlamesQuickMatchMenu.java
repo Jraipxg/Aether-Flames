@@ -86,11 +86,11 @@ public class AetherFlamesQuickMatchMenu extends MenuScene implements IOnMenuItem
 
 	void searchForGame(int numPlayersDesired)
 	{
-		if(numPlayersDesired == 1)
-		{
+		//if(numPlayersDesired == 1)
+		//{
 			AetherFlamesActivity.mScene.clearChildScene();
 			AetherFlamesActivity.afa.initServerAndClient(numPlayersDesired);
-		}
+		//}
 		AetherFlamesMainMenu.revertMenu();
 	}
 	

@@ -293,8 +293,8 @@ public class Ship implements AetherFlamesConstants
 				int bulletID = AetherFlamesActivity.mPhysicsWorld.nextBulletID();
 				ep -= currentWeapon.COST;
 				Body bulletBody = currentWeapon.fire(bulletID, barrelPosition(), body.getLinearVelocity(), body.getAngle());
-				//AetherFlamesActivity.mPhysicsWorld.registerBullet(bulletID, currentWeapon.getType(), bulletBody,
-				//		barrelPosition(), body.getLinearVelocity(), body.getAngle());
+				AetherFlamesActivity.mPhysicsWorld.registerBullet(bulletID, currentWeapon.getType(), bulletBody,
+						barrelPosition(), body.getLinearVelocity(), body.getAngle());
 				weaponCooldownOver = System.currentTimeMillis() + currentWeapon.COOLDOWN;
 			}
 		}

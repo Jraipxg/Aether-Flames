@@ -58,9 +58,11 @@ import android.widget.Toast;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.jjaz.aetherflames.messages.server.CollisionServerMessage;
 import com.jjaz.aetherflames.messages.server.ConnectionCloseServerMessage;
 import com.jjaz.aetherflames.messages.server.ConnectionEstablishedServerMessage;
 import com.jjaz.aetherflames.messages.server.GameStartServerMessage;
+import com.jjaz.aetherflames.messages.client.CollisionClientMessage;
 import com.jjaz.aetherflames.messages.client.ConnectionEstablishClientMessage;
 import com.jjaz.aetherflames.physics.DistributedFixedStepPhysicsWorld;
 
@@ -170,6 +172,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	public static boolean mGameStarted = false;
 	
 	public static int myShipColor;
+	public static int numPlayersInGame;
 	public static int WhyIsItDoingItTwice = 0;
 	
 	@Override
@@ -501,7 +504,13 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 					colors.add(Ship.BLUE_SHIP);
 					colors.add(Ship.PURPLE_SHIP);
 					colors.add(Ship.BLACK_SHIP);
-					AetherFlamesActivity.createGame(colors, Ship.GREEN_SHIP);
+					
+					for(int i = 7; i >= AetherFlamesActivity.numPlayersInGame; i--)
+					{
+						colors.remove(i);
+					}
+					
+					AetherFlamesActivity.createGame(colors, AetherFlamesActivity.myShipColor);
 					AetherFlamesActivity.this.startGame();
 				}
 			});
@@ -509,7 +518,10 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_CONNECTION_ESTABLISHED, ConnectionEstablishedServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
-					// do nothing
+					final ConnectionEstablishedServerMessage connectionEstablishedServerMessage = (ConnectionEstablishedServerMessage)pServerMessage;
+					AetherFlamesActivity.numPlayersInGame = connectionEstablishedServerMessage.mMaxPlayers;
+					AetherFlamesActivity.myShipColor = connectionEstablishedServerMessage.mPlayerNum;
+
 				}
 			});
 			

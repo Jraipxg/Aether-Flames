@@ -24,6 +24,9 @@ public class ConnectionEstablishedServerMessage extends ServerMessage implements
 	// Fields
 	// ===========================================================
 
+	public short mPlayerNum;
+	public short mMaxPlayers;
+	
 	// ===========================================================
 	// Constructors
 	// ===========================================================
@@ -31,11 +34,21 @@ public class ConnectionEstablishedServerMessage extends ServerMessage implements
 	public ConnectionEstablishedServerMessage() {
 
 	}
+	
+	public ConnectionEstablishedServerMessage(short pPlayerNum, short pMaxPlayers) {
+		this.mPlayerNum = pPlayerNum;
+		this.mMaxPlayers = pMaxPlayers;
+	}
 
 	// ===========================================================
 	// Getter & Setter
 	// ===========================================================
-
+	
+	public void setPlayers(final short playerNum, final short maxPlayers) {
+		this.mPlayerNum = playerNum;
+		this.mMaxPlayers = maxPlayers;
+	}
+	
 	// ===========================================================
 	// Methods for/from SuperClass/Interfaces
 	// ===========================================================
@@ -47,12 +60,14 @@ public class ConnectionEstablishedServerMessage extends ServerMessage implements
 
 	@Override
 	protected void onReadTransmissionData(final DataInputStream pDataInputStream) throws IOException {
-		/* Nothing to read. */
+		this.mPlayerNum = pDataInputStream.readShort();
+		this.mMaxPlayers = pDataInputStream.readShort();
 	}
 
 	@Override
 	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream) throws IOException {
-		/* Nothing to write. */
+		pDataOutputStream.writeShort(this.mPlayerNum);
+		pDataOutputStream.writeShort(this.mMaxPlayers);
 	}
 
 	// ===========================================================

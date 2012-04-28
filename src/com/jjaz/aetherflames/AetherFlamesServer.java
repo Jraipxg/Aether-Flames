@@ -133,6 +133,7 @@ public class AetherFlamesServer extends
 					if(connectionEstablishClientMessage.getProtocolVersion() == PROTOCOL_VERSION) {
 						if (gameStarted == false && connectedPlayers.size() < 4) {
 							final ConnectionEstablishedServerMessage connectionEstablishedServerMessage = (ConnectionEstablishedServerMessage) AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_CONNECTION_ESTABLISHED);
+							connectionEstablishedServerMessage.setPlayers((short)(connectedPlayers.size()), (short)AetherFlamesServer.this.requiredNumPlayers);
 							try {
 								pClientConnector.sendServerMessage(connectionEstablishedServerMessage);
 							} catch (IOException e) {
