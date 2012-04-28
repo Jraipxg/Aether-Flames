@@ -279,8 +279,8 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 			// delete the bullet if it exists
 			if (bulletBody != null) {
 				bulletBody.setUserData("delete");
+				this.mBullets.remove(bulletID);
 			}
-			this.mBullets.remove(bulletID);
 		}
 	}
 	
