@@ -235,7 +235,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		
 		Ship ship = this.mShips.get(message.mShipID);
 		
-		if (ship != null) {
+		if (ship != null && message.mShipID != this.mID) {
 			int bulletID = message.mBulletID;
 			int type = message.mBulletType;
 			float angle = message.mAngle;

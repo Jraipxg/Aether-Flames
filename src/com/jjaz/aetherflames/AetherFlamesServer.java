@@ -94,7 +94,7 @@ public class AetherFlamesServer extends
 				synchronized (AetherFlamesServer.this) {
 					final NewBulletClientMessage newBulletClientMessage = (NewBulletClientMessage)pClientMessage;
 					final NewBulletServerMessage newBulletServerMessage = (NewBulletServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_NEW_BULLET);
-					newBulletServerMessage.setNewBullet(newBulletClientMessage.mShipID, newBulletClientMessage.mBulletID, newBulletClientMessage.mBulletType,
+					newBulletServerMessage.setNewBullet(newBulletClientMessage.mFrameNum, newBulletClientMessage.mShipID, newBulletClientMessage.mBulletID, newBulletClientMessage.mBulletType,
 														newBulletClientMessage.mVelocityX, newBulletClientMessage.mVelocityY,
 														newBulletClientMessage.mPosX, newBulletClientMessage.mPosY, newBulletClientMessage.mAngle);
 					AetherFlamesServer.this.sendBroadcastServerMessage(newBulletServerMessage); // broadcast

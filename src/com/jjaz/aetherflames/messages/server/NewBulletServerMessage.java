@@ -60,9 +60,10 @@ public class NewBulletServerMessage extends ServerMessage implements AetherFlame
 	 * @param posX Bullet initial position x component.
 	 * @param posY Bullet initial position y component.
 	 */	
-	public void setNewBullet(final int sID, final int bID, final int type,
+	public void setNewBullet(final int frameNum, final int sID, final int bID, final int type,
 			  				 final float vecX, final float vecY,
 			  				 final float posX, final float posY, final float angle) {
+		this.mFrameNum = frameNum;
 		this.mShipID = sID;
 		this.mBulletID = bID;
 		this.mBulletType = type;
