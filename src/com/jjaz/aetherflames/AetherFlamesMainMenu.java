@@ -79,7 +79,8 @@ public class AetherFlamesMainMenu extends MenuScene implements IOnMenuItemClickL
 		if(quickMatchMenu == null)
 		{
 			quickMatchMenu = new AetherFlamesQuickMatchMenu();
-		}
+		} 
+		quickMatchMenu.setPosition(10, AetherFlamesActivity.CAMERA_HEIGHT*0.2f);
 		this.setChildSceneModal(AetherFlamesMainMenu.quickMatchMenu);
 	}
 	
