@@ -66,8 +66,11 @@ import android.widget.Toast;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.jjaz.aetherflames.messages.server.CollisionServerMessage;
 import com.jjaz.aetherflames.messages.server.ConnectionCloseServerMessage;
+import com.jjaz.aetherflames.messages.server.ConnectionEstablishedServerMessage;
 import com.jjaz.aetherflames.messages.server.GameStartServerMessage;
+import com.jjaz.aetherflames.messages.client.ConnectionEstablishClientMessage;
 import com.jjaz.aetherflames.physics.DistributedFixedStepPhysicsWorld;
 
 public class AetherFlamesActivity extends SimpleBaseGameActivity implements AetherFlamesConstants
@@ -436,6 +439,8 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	}
 
 	private void initClient() {
+		mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_CONNECTION_ESTABLISH, ConnectionEstablishClientMessage.class);
+		
 		try {
 			this.mServerConnector = new SocketConnectionServerConnector(new SocketConnection(new Socket(this.mServerIP, SERVER_PORT)), new ServerConnectorListener());
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE, ConnectionCloseServerMessage.class, new IServerMessageHandler<SocketConnection>() {
@@ -449,6 +454,13 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
 					AetherFlamesActivity.this.startGame();
+				}
+			});
+		
+			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_CONNECTION_ESTABLISHED, ConnectionEstablishedServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+				@Override
+				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+					// do nothing
 				}
 			});
 			
@@ -544,6 +556,14 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		@Override
 		public void onStarted(final ServerConnector<SocketConnection> pConnector) {
 			AetherFlamesActivity.this.toast("CLIENT: Connected to server.");
+			final ConnectionEstablishClientMessage connectionEstablishClientMessage = (ConnectionEstablishClientMessage)AetherFlamesActivity.this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_CONNECTION_ESTABLISH);
+			connectionEstablishClientMessage.setProtocolVersion(PROTOCOL_VERSION);
+			try {
+				AetherFlamesActivity.this.mServerConnector.sendClientMessage(connectionEstablishClientMessage);
+			} catch (IOException e) {
+				Debug.e(e);
+			}
+			AetherFlamesActivity.this.mMessagePool.recycleMessage(connectionEstablishClientMessage);
 		}
 
 		@Override

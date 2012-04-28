@@ -7,23 +7,8 @@ import java.util.LinkedList;
 
 import org.andengine.engine.handler.IUpdateHandler;
 import com.jjaz.aetherflames.AetherFlamesConstants;
-import com.jjaz.aetherflames.messages.client.ConnectionCloseClientMessage;
-import com.jjaz.aetherflames.messages.client.ConnectionEstablishClientMessage;
-import com.jjaz.aetherflames.messages.client.GameStateClientMessage;
-import com.jjaz.aetherflames.messages.client.NewBulletClientMessage;
-import com.jjaz.aetherflames.messages.client.ShipUpdateClientMessage;
-import com.jjaz.aetherflames.messages.client.CollisionClientMessage;
-import com.jjaz.aetherflames.messages.client.DoneClientMessage;
-import com.jjaz.aetherflames.messages.server.GameStateServerMessage;
-import com.jjaz.aetherflames.messages.server.CollisionServerMessage;
-import com.jjaz.aetherflames.messages.server.GameEndServerMessage;
-import com.jjaz.aetherflames.messages.server.GameStartServerMessage;
-import com.jjaz.aetherflames.messages.server.NewBulletServerMessage;
-import com.jjaz.aetherflames.messages.server.ShipUpdateServerMessage;
-import com.jjaz.aetherflames.messages.server.DoneServerMessage;
-import com.jjaz.aetherflames.messages.server.ConnectionEstablishedServerMessage;
-import com.jjaz.aetherflames.messages.server.ConnectionRejectedProtocolMissmatchServerMessage;
-import com.jjaz.aetherflames.messages.server.ConnectionRejectedGameStartedServerMessage;
+import com.jjaz.aetherflames.messages.client.*;
+import com.jjaz.aetherflames.messages.server.*;
 import org.andengine.extension.multiplayer.protocol.adt.message.IMessage;
 import org.andengine.extension.multiplayer.protocol.adt.message.client.IClientMessage;
 import org.andengine.extension.multiplayer.protocol.adt.message.server.ServerMessage;
@@ -67,11 +52,12 @@ public class AetherFlamesServer extends
 	}		
 
 	private void initMessagePool() {
-		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_CONNECTION_ESTABLISHED, ShipUpdateServerMessage.class);
-		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE, ShipUpdateServerMessage.class);
+		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_CONNECTION_ESTABLISHED, ConnectionEstablishedServerMessage.class);
+		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE, ConnectionCloseServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_NEW_BULLET, NewBulletServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_SHIP_UPDATE, ShipUpdateServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_COLLISION, CollisionServerMessage.class);
+		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_GAME_STATE, GameStateServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_GAME_START, GameStartServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_GAME_END, GameEndServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_DONE, DoneServerMessage.class);
@@ -93,7 +79,7 @@ public class AetherFlamesServer extends
 	protected SocketConnectionClientConnector newClientConnector(final SocketConnection pSocketConnection) throws IOException {
 		final SocketConnectionClientConnector clientConnector = new SocketConnectionClientConnector(pSocketConnection);
 
-		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_GAME_STATE, NewBulletClientMessage.class, new IClientMessageHandler<SocketConnection>() {
+		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_GAME_STATE, GameStateClientMessage.class, new IClientMessageHandler<SocketConnection>() {
 			@Override
 			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
 				synchronized (AetherFlamesServer.this) {
@@ -106,7 +92,7 @@ public class AetherFlamesServer extends
 			}
 		});
 		
-		/*clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET, NewBulletClientMessage.class, new IClientMessageHandler<SocketConnection>() {
+		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET, NewBulletClientMessage.class, new IClientMessageHandler<SocketConnection>() {
 			@Override
 			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
 				synchronized (AetherFlamesServer.this) {
@@ -119,7 +105,7 @@ public class AetherFlamesServer extends
 					AetherFlamesServer.this.mMessagePool.recycleMessage(newBulletServerMessage);
 				}
 			}
-		});*/
+		});
 
 		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_SHIP_UPDATE, ShipUpdateClientMessage.class, new IClientMessageHandler<SocketConnection>() {
 			@Override

@@ -93,7 +93,7 @@ public class CollisionHandler implements ContactListener
 			{
 				int damage = Integer.parseInt(tokensB[2]);
 				float blastRadius = Float.parseFloat(tokensB[3]);
-				int id = Integer.parseInt(tokensA[4]);
+				int id = Integer.parseInt(tokensB[4]);
 				explode(bodyB, damage, blastRadius, id);
 			}
 		}

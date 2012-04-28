@@ -112,11 +112,6 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 			message.setFrameNumber(this.mFrameNum);
 			message.setShipState(this.mShips.get(this.mID));
 			
-			if (message == null) {
-				int x = 102319023;
-				x += 1;
-			}
-			
 			// send the message
 			try {
 				this.mServerConnector.sendClientMessage(message);
@@ -295,7 +290,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	 * @return True if successful, false otherwise
 	 */
 	public boolean registerBullet(int bulletID, int type, Body body, Vector2 position, Vector2 velocity, float angle) {
-		
+		/*
 		// add new bullet to table of bullet body objects
 		this.mBullets.put(bulletID, body);
 			
@@ -306,7 +301,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		// send message
 		boolean retval = true;
 		try {
-			this.mServerConnector.sendClientMessage(message);
+			//this.mServerConnector.sendClientMessage(message);
 		} catch (IOException e) {
 			Debug.e(e);
 			retval = false;
@@ -314,7 +309,8 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 			this.mMessagePool.recycleMessage(message);
 		}
 			
-		return retval;
+		return retval;*/
+		return true;
 	}
 	
 	/**
@@ -324,7 +320,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	 * @param shipID The ID of the sender (and affected ship)
 	 */
 	public void registerCollision(int bulletID, int shipID) {
-		// create message
+		/*// create message
 		CollisionClientMessage message = (CollisionClientMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_COLLISION);
 		message.setCollision(bulletID, shipID);
 
@@ -332,13 +328,12 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		this.mBullets.remove(bulletID);
 		
 		// send message
-		try {
 			this.mServerConnector.sendClientMessage(message);
 		} catch (IOException e) {
 			Debug.e(e);
 		} finally {
 			this.mMessagePool.recycleMessage(message);
-		}
+		}*/
 	}
 	
 	@Override

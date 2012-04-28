@@ -46,6 +46,10 @@ public class ConnectionEstablishClientMessage extends ClientMessage implements A
 	public short getProtocolVersion() {
 		return this.mProtocolVersion;
 	}
+	
+	public void setProtocolVersion(final short pProtocolVersion) {
+		this.mProtocolVersion = pProtocolVersion;
+	}
 
 	// ===========================================================
 	// Methods for/from SuperClass/Interfaces
