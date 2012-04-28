@@ -107,18 +107,23 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		Ship ship = this.mShips.get(this.mID);
 		
 		// set the message fields and send the message if the ship is still alive
-		if (ship != null) {
+		if (ship != null && this.mServerConnector != null) {
 			GameStateClientMessage message = (GameStateClientMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_GAME_STATE);
 			message.setFrameNumber(this.mFrameNum);
 			message.setShipState(this.mShips.get(this.mID));
-			message.setBulletState(FIELD_EMPTY, FIELD_EMPTY, FIELD_EMPTY, FIELD_EMPTY, FIELD_EMPTY, FIELD_EMPTY, FIELD_EMPTY);
+			
+			if (message == null) {
+				int x = 102319023;
+				x += 1;
+			}
 			
 			// send the message
 			try {
 				this.mServerConnector.sendClientMessage(message);
-				this.mMessagePool.recycleMessage(message);
 			} catch (IOException e) {
 				Debug.e(e);
+			} finally {
+				this.mMessagePool.recycleMessage(message);
 			}
 		}
 	}
@@ -217,17 +222,6 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 			} else {
 				ship.deactivateShields();
 			}
-			
-			// TODO remove if event messages
-			// create a new bullet if there is one
-			int bulletID = message.mBulletID;
-			if (bulletID != FIELD_EMPTY) {
-				int type = message.mBulletType;
-				angle = message.mBulletAngle;
-				position = new Vector2(message.mBulletPosX, message.mBulletPosY);
-				velocity = new Vector2(message.mBulletVelocityX, message.mBulletVelocityY);
-				createNewBullet(messageFrame, currentFrame, ship.getAvailableWeapons(), bulletID, type, angle, position, velocity);
-			}
 		}
 	}
 	
@@ -310,15 +304,17 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		message.setNewBullet(this.mFrameNum, this.mID, bulletID, type, velocity.x, velocity.y, position.x, position.y, angle);
 			
 		// send message
+		boolean retval = true;
 		try {
 			this.mServerConnector.sendClientMessage(message);
-			this.mMessagePool.recycleMessage(message);
 		} catch (IOException e) {
 			Debug.e(e);
-			return false;
+			retval = false;
+		} finally {
+			this.mMessagePool.recycleMessage(message);
 		}
 			
-		return true;
+		return retval;
 	}
 	
 	/**
@@ -338,9 +334,10 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		// send message
 		try {
 			this.mServerConnector.sendClientMessage(message);
-			this.mMessagePool.recycleMessage(message);
 		} catch (IOException e) {
 			Debug.e(e);
+		} finally {
+			this.mMessagePool.recycleMessage(message);
 		}
 	}
 	

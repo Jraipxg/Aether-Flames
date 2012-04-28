@@ -23,13 +23,6 @@ public class GameStateServerMessage extends ServerMessage implements AetherFlame
 	public float mShipPosX, mShipPosY;
 	public float mShipVelocityX, mShipVelocityY;
 	
-	// bullet data
-	public int mBulletID;
-	public int mBulletType;
-	public float mBulletAngle;
-	public float mBulletPosX, mBulletPosY;
-	public float mBulletVelocityX, mBulletVelocityY;
-	
 	/**
 	 * C'tor
 	 */
@@ -42,8 +35,26 @@ public class GameStateServerMessage extends ServerMessage implements AetherFlame
 	 * 
 	 * @param frameNum The frame number of the message
 	 */
-	public GameStateServerMessage(final int frameNum) {
+	public GameStateServerMessage(final int frameNum,
+			final int ShipID,
+			final int Health,
+			final int Energy,
+			final boolean ShieldActive,
+			final float Orientation,
+			final float AngularVelocity,
+			final float ShipPosX, final float ShipPosY,
+			final float ShipVelocityX, final float ShipVelocityY) {
 		this.mFrameNum = frameNum;
+		this.mShipID = ShipID;
+		this.mHealth = Health;
+		this.mEnergy = Energy;
+		this.mShieldActive = ShieldActive;
+		this.mOrientation = Orientation;
+		this.mAngularVelocity = AngularVelocity;
+		this.mShipPosX = ShipPosX;
+		this.mShipPosY = ShipPosY;
+		this.mShipVelocityX = ShipVelocityX;
+		this.mShipVelocityY = ShipVelocityY;
 	}
 	
 	/**
@@ -76,27 +87,6 @@ public class GameStateServerMessage extends ServerMessage implements AetherFlame
 		this.mShipVelocityY = velY;
 	}
 	
-	/**
-	 * Setter.
-	 * 
-	 * @param bID Bullet id.
-	 * @param posX Bullet initial position x component.
-	 * @param posY Bullet initial position y component.
-	 * @param velX Bullet velocity x component.
-	 * @param velY Bullet velocity y component.
-	 */	
-	public void setBulletState(final int bID, final int type, final float angle,
-			   			       final float posX, final float posY,
-			   			  	   final float velX, final float velY) {
-		this.mBulletID = bID;
-		this.mBulletType = type;
-		this.mBulletAngle = angle;
-		this.mBulletPosX = posX;
-		this.mBulletPosY = posY;		
-		this.mBulletVelocityX = velX;
-		this.mBulletVelocityY = velY;
-	}
-	
 	public void setFromClientMessage(GameStateClientMessage message) {
 		this.mFrameNum = message.mFrameNum;
 		this.mShipID = message.mShipID;
@@ -109,13 +99,6 @@ public class GameStateServerMessage extends ServerMessage implements AetherFlame
 		this.mShipPosY = message.mShipPosY;		
 		this.mShipVelocityX = message.mShipVelocityX;
 		this.mShipVelocityY = message.mShipVelocityY;
-		this.mBulletID = message.mBulletID;
-		this.mBulletType = message.mBulletType;
-		this.mBulletAngle = message.mBulletAngle;
-		this.mBulletPosX = message.mBulletPosX;
-		this.mBulletPosY = message.mBulletPosY;		
-		this.mBulletVelocityX = message.mBulletVelocityX;
-		this.mBulletVelocityY = message.mBulletVelocityY;
 	}
 	
 	@Override
@@ -138,13 +121,13 @@ public class GameStateServerMessage extends ServerMessage implements AetherFlame
 		this.mShipVelocityX = pDataInputStream.readFloat();
 		this.mShipVelocityY = pDataInputStream.readFloat();
 
-		this.mBulletID = pDataInputStream.readInt();
+		/*this.mBulletID = pDataInputStream.readInt();
 		this.mBulletType = pDataInputStream.readInt();
 		this.mBulletAngle = pDataInputStream.readFloat();
 		this.mBulletPosX = pDataInputStream.readFloat();
 		this.mBulletPosY = pDataInputStream.readFloat();
 		this.mBulletVelocityX = pDataInputStream.readFloat();
-		this.mBulletVelocityY = pDataInputStream.readFloat();
+		this.mBulletVelocityY = pDataInputStream.readFloat();*/
 	}
 
 	@Override
@@ -162,12 +145,12 @@ public class GameStateServerMessage extends ServerMessage implements AetherFlame
 		pDataOutputStream.writeFloat(this.mShipVelocityX);
 		pDataOutputStream.writeFloat(this.mShipVelocityY);
 		
-		pDataOutputStream.writeInt(this.mBulletID);
+		/*pDataOutputStream.writeInt(this.mBulletID);
 		pDataOutputStream.writeInt(this.mBulletType);
 		pDataOutputStream.writeFloat(this.mBulletAngle);
 		pDataOutputStream.writeFloat(this.mBulletPosX);
 		pDataOutputStream.writeFloat(this.mBulletPosY);
 		pDataOutputStream.writeFloat(this.mBulletVelocityX);
-		pDataOutputStream.writeFloat(this.mBulletVelocityY);
+		pDataOutputStream.writeFloat(this.mBulletVelocityY);*/
 	}
 }

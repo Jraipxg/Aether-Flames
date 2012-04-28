@@ -406,8 +406,8 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	}
 	
 	private void startGame() {
-		this.mGameStarted = true;
-		this.mPhysicsWorld.startGame();
+		AetherFlamesActivity.mGameStarted = true;
+		AetherFlamesActivity.mPhysicsWorld.startGame();
 	}
 	
 	private void initServerAndClient() {

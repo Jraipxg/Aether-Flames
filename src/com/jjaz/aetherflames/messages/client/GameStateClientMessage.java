@@ -23,13 +23,6 @@ public class GameStateClientMessage extends ClientMessage implements AetherFlame
 	public float mShipPosX, mShipPosY;
 	public float mShipVelocityX, mShipVelocityY;
 	
-	// bullet data
-	public int mBulletID;
-	public int mBulletType;
-	public float mBulletAngle;
-	public float mBulletPosX, mBulletPosY;
-	public float mBulletVelocityX, mBulletVelocityY;
-	
 	/**
 	 * C'tor
 	 */
@@ -42,8 +35,26 @@ public class GameStateClientMessage extends ClientMessage implements AetherFlame
 	 * 
 	 * @param frameNum The frame number of the message
 	 */
-	public GameStateClientMessage(final int frameNum) {
+	public GameStateClientMessage(final int frameNum,
+			final int ShipID,
+			final int Health,
+			final int Energy,
+			final boolean ShieldActive,
+			final float Orientation,
+			final float AngularVelocity,
+			final float ShipPosX, final float ShipPosY,
+			final float ShipVelocityX, final float ShipVelocityY) {
 		this.mFrameNum = frameNum;
+		this.mShipID = ShipID;
+		this.mHealth = Health;
+		this.mEnergy = Energy;
+		this.mShieldActive = ShieldActive;
+		this.mOrientation = Orientation;
+		this.mAngularVelocity = AngularVelocity;
+		this.mShipPosX = ShipPosX;
+		this.mShipPosY = ShipPosY;
+		this.mShipVelocityX = ShipVelocityX;
+		this.mShipVelocityY = ShipVelocityY;
 	}
 	
 	public void setFrameNumber(int num) {
@@ -68,30 +79,9 @@ public class GameStateClientMessage extends ClientMessage implements AetherFlame
 		this.mShipVelocityY = s.getVelocity().y;
 	}
 	
-	/**
-	 * Setter.
-	 * 
-	 * @param bID Bullet id.
-	 * @param posX Bullet initial position x component.
-	 * @param posY Bullet initial position y component.
-	 * @param velX Bullet velocity x component.
-	 * @param velY Bullet velocity y component.
-	 */	
-	public void setBulletState(final int bID, final int type, final float angle,
-			   			       final float posX, final float posY,
-			   			  	   final float velX, final float velY) {
-		this.mBulletID = bID;
-		this.mBulletType = type;
-		this.mBulletAngle = angle;
-		this.mBulletPosX = posX;
-		this.mBulletPosY = posY;		
-		this.mBulletVelocityX = velX;
-		this.mBulletVelocityY = velY;
-	}
-	
 	@Override
 	public short getFlag() {
-		return FLAG_MESSAGE_SERVER_GAME_STATE;
+		return FLAG_MESSAGE_CLIENT_GAME_STATE;
 	}
 
 	@Override
@@ -108,14 +98,6 @@ public class GameStateClientMessage extends ClientMessage implements AetherFlame
 		this.mShipPosY = pDataInputStream.readFloat();
 		this.mShipVelocityX = pDataInputStream.readFloat();
 		this.mShipVelocityY = pDataInputStream.readFloat();
-
-		this.mBulletID = pDataInputStream.readInt();
-		this.mBulletType = pDataInputStream.readInt();
-		this.mBulletAngle = pDataInputStream.readFloat();
-		this.mBulletPosX = pDataInputStream.readFloat();
-		this.mBulletPosY = pDataInputStream.readFloat();
-		this.mBulletVelocityX = pDataInputStream.readFloat();
-		this.mBulletVelocityY = pDataInputStream.readFloat();
 	}
 
 	@Override
@@ -132,13 +114,5 @@ public class GameStateClientMessage extends ClientMessage implements AetherFlame
 		pDataOutputStream.writeFloat(this.mShipPosY);
 		pDataOutputStream.writeFloat(this.mShipVelocityX);
 		pDataOutputStream.writeFloat(this.mShipVelocityY);
-		
-		pDataOutputStream.writeInt(this.mBulletID);
-		pDataOutputStream.writeInt(this.mBulletType);
-		pDataOutputStream.writeFloat(this.mBulletAngle);
-		pDataOutputStream.writeFloat(this.mBulletPosX);
-		pDataOutputStream.writeFloat(this.mBulletPosY);
-		pDataOutputStream.writeFloat(this.mBulletVelocityX);
-		pDataOutputStream.writeFloat(this.mBulletVelocityY);
 	}
 }

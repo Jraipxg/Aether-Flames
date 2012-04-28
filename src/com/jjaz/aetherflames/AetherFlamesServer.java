@@ -106,7 +106,7 @@ public class AetherFlamesServer extends
 			}
 		});
 		
-		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET, NewBulletClientMessage.class, new IClientMessageHandler<SocketConnection>() {
+		/*clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET, NewBulletClientMessage.class, new IClientMessageHandler<SocketConnection>() {
 			@Override
 			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
 				synchronized (AetherFlamesServer.this) {
@@ -119,7 +119,7 @@ public class AetherFlamesServer extends
 					AetherFlamesServer.this.mMessagePool.recycleMessage(newBulletServerMessage);
 				}
 			}
-		});
+		});*/
 
 		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_SHIP_UPDATE, ShipUpdateClientMessage.class, new IClientMessageHandler<SocketConnection>() {
 			@Override
