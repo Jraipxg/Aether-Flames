@@ -2,7 +2,6 @@ package com.jjaz.aetherflames;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,24 +44,17 @@ import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 import org.andengine.util.debug.Debug;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.opengl.GLES20;
 import android.os.Bundle;
 import android.view.KeyEvent;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.jjaz.aetherflames.messages.server.CollisionServerMessage;
 import com.jjaz.aetherflames.messages.server.ConnectionCloseServerMessage;
 import com.jjaz.aetherflames.messages.server.ConnectionEstablishedServerMessage;
 import com.jjaz.aetherflames.messages.server.GameStartServerMessage;
-import com.jjaz.aetherflames.messages.client.CollisionClientMessage;
 import com.jjaz.aetherflames.messages.client.ConnectionEstablishClientMessage;
 import com.jjaz.aetherflames.physics.DistributedFixedStepPhysicsWorld;
 

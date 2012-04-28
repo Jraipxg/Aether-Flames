@@ -111,6 +111,12 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 			GameStateClientMessage message = (GameStateClientMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_GAME_STATE);
 			message.setFrameNumber(this.mFrameNum);
 			message.setShipState(this.mShips.get(this.mID));
+
+			if(this.mShips.get(this.mID).getHealth() < 1000)
+			{
+				int x = 10;
+				x = x;
+			}
 			
 			// send the message
 			try {
@@ -195,6 +201,9 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		
 		if (currentFrame - messageFrame > MAX_GAME_STATE_DELAY) {
 			return;
+		} else if (currentFrame < messageFrame) {
+			this.mFrameNum = messageFrame;
+			currentFrame = messageFrame;
 		}
 		
 		int shipID = message.mShipID;
@@ -211,6 +220,12 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		
 			// set nonphysical ship parameters
 			ship.setHealth(message.mHealth);
+			if(message.mHealth < 1000)
+			{
+				int x = 10;
+				x = x;
+			}
+			
 			ship.setEnergy(message.mEnergy);
 			if (message.mShieldActive) {
 				ship.activateShields();
@@ -231,7 +246,10 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		
 		if (currentFrame - messageFrame > MAX_GAME_STATE_DELAY) {
 			return;
-		}
+		} else if (currentFrame < messageFrame) {
+			this.mFrameNum = messageFrame;
+			currentFrame = messageFrame;
+		} 
 		
 		Ship ship = this.mShips.get(message.mShipID);
 		
