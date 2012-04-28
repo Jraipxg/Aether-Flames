@@ -321,6 +321,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		AetherFlamesActivity.afa.finish();
 	}
 	
+	/*
 	protected Dialog onCreateDialog(final int pID) {
 		switch(pID) {
 			case DIALOG_SHOW_SERVER_IP_ID:
@@ -409,7 +410,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 				}).create();
 			default:
 				return super.onCreateDialog(pID);
-					/*.setNeutralButton("Server", new OnClickListener() {
+					.setNeutralButton("Server", new OnClickListener() {
 						@Override
 						public void onClick(final DialogInterface pDialog, final int pWhich) {
 							//AetherFlamesActivity.this.toast("You can add and move sprites, which are only shown on the clients.");
@@ -424,9 +425,9 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 							//AetherFlamesActivity.this.initServerAndClient();
 							//AetherFlamesActivity.this.showDialog(DIALOG_SHOW_SERVER_IP_ID);
 						}
-					})*/
+					})
 		}
-	}
+	}*/
 	
 	@Override
 	protected void onDestroy() {
@@ -451,8 +452,8 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		AetherFlamesActivity.mPhysicsWorld.startGame();
 	}
 	
-	protected void initServerAndClient() {
-		this.initServer();
+	protected void initServerAndClient(int numPlayers) {
+		this.initServer(numPlayers);
 
 		/* Wait some time after the server has been started, so it actually can start up. */
 		try {
@@ -464,8 +465,8 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		this.initClient();
 	}
 
-	private void initServer() {
-		this.mSocketServer = new AetherFlamesServer(new ClientConnectorListener());
+	private void initServer(int numPlayers) {
+		this.mSocketServer = new AetherFlamesServer(new ClientConnectorListener(), numPlayers);
 		/*{
 			@Override
 			protected SocketConnectionClientConnector newClientConnector(final SocketConnection pSocketConnection) throws IOException {

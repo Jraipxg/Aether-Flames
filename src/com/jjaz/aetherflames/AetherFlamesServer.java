@@ -31,24 +31,21 @@ public class AetherFlamesServer extends
 	boolean gameStarted;
 	LinkedList<ServerMessage> messages;
 	HashSet<ClientConnector<SocketConnection>> connectedPlayers;
-	int numDone; // needs to reach number of players
-	int numPlayers; // current player count
-	final int NUM_PLAYERS = 1;
+	int requiredNumPlayers;
 	
 	// ===========================================================
 	// Constructors
 	// ===========================================================
 
-	public AetherFlamesServer(final ISocketConnectionClientConnectorListener pSocketConnectionClientConnectorListener) {
+	public AetherFlamesServer(final ISocketConnectionClientConnectorListener pSocketConnectionClientConnectorListener, int maxPlayers) {
 		super(SERVER_PORT, pSocketConnectionClientConnectorListener, new DefaultSocketServerListener<SocketConnectionClientConnector>());
 
 		this.initMessagePool();
 		messages = new LinkedList<ServerMessage>();
 		connectedPlayers = new HashSet<ClientConnector<SocketConnection>>();
 		
-		numDone = 0;
 		gameStarted = false;
-
+		this.requiredNumPlayers = maxPlayers;
 	}		
 
 	private void initMessagePool() {
@@ -56,12 +53,10 @@ public class AetherFlamesServer extends
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_CONNECTION_REJECTED_GAME_STARTED, ConnectionRejectedGameStartedServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE, ConnectionCloseServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_NEW_BULLET, NewBulletServerMessage.class);
-		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_SHIP_UPDATE, ShipUpdateServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_COLLISION, CollisionServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_GAME_STATE, GameStateServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_GAME_START, GameStartServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_GAME_END, GameEndServerMessage.class);
-		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_DONE, DoneServerMessage.class);
 	}
 
 	@Override
@@ -108,21 +103,6 @@ public class AetherFlamesServer extends
 			}
 		});
 
-		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_SHIP_UPDATE, ShipUpdateClientMessage.class, new IClientMessageHandler<SocketConnection>() {
-			@Override
-			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
-				synchronized (AetherFlamesServer.this) {
-					final ShipUpdateClientMessage shipUpdateClientMessage = (ShipUpdateClientMessage)pClientMessage;
-					final ShipUpdateServerMessage shipUpdateServerMessage = (ShipUpdateServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_SHIP_UPDATE);
-					shipUpdateServerMessage.setShipUpdate(shipUpdateClientMessage.mShipID, shipUpdateClientMessage.mHealth,
-														shipUpdateClientMessage.mOrientation, shipUpdateClientMessage.mAngularVelocity,
-														shipUpdateClientMessage.mVectorX, shipUpdateClientMessage.mVectorY,
-														shipUpdateClientMessage.mPosX, shipUpdateClientMessage.mPosY);
-					messages.addLast(shipUpdateServerMessage);
-				}
-			}
-		});
-
 		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_COLLISION, CollisionClientMessage.class, new IClientMessageHandler<SocketConnection>() {
 			@Override
 			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
@@ -161,7 +141,7 @@ public class AetherFlamesServer extends
 							connectedPlayers.add(pClientConnector); // add this client to our known clients
 							AetherFlamesServer.this.mMessagePool.recycleMessage(connectionEstablishedServerMessage);
 							// if we reached the player count, start the game already!
-							if (connectedPlayers.size() == NUM_PLAYERS) {
+							if (connectedPlayers.size() == requiredNumPlayers) {
 								final GameStartServerMessage gameStartServerMessage = (GameStartServerMessage) AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_GAME_START);
 								AetherFlamesServer.this.sendBroadcastServerMessage(gameStartServerMessage);
 								AetherFlamesServer.this.mMessagePool.recycleMessage(gameStartServerMessage);
@@ -189,33 +169,7 @@ public class AetherFlamesServer extends
 				}
 			}
 		});
-
-		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_DONE, DoneClientMessage.class, new IClientMessageHandler<SocketConnection>() {
-			@Override
-			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
-				// can use this to send out all the client messages
-				synchronized (AetherFlamesServer.this) {
-					numDone += 1;
-					if (numDone == NUM_PLAYERS) {
-						messages.addLast((DoneServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_DONE));
-						try {
-							Iterator<ServerMessage> iterator = messages.iterator();
-							while (iterator.hasNext()) {
-								ServerMessage message = iterator.next();
-								AetherFlamesServer.this.sendBroadcastServerMessage(message);
-								AetherFlamesServer.this.mMessagePool.recycleMessage(message);
-							}
-						} catch (IOException e) {
-							Debug.e(e);
-						}
-						messages.clear();
-						numDone = 0; // reset
-					}
-				}
-
-			}
-		});
-
+		
 		return clientConnector;
 	}
 
