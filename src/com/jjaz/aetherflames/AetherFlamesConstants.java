@@ -49,7 +49,6 @@ public interface AetherFlamesConstants {
 	public static final short FLAG_MESSAGE_PHONE_GET_FIRST_SERVER = FLAG_MESSAGE_PHONE_START_SERVER + 1;
 	public static final short FLAG_MESSAGE_PHONE_GET_SERVER_LIST = FLAG_MESSAGE_PHONE_GET_FIRST_SERVER + 1;
 	public static final short FLAG_MESSAGE_PHONE_CURRENT_PLAYER_COUNT = FLAG_MESSAGE_PHONE_GET_SERVER_LIST + 1;
-	public static final short FLAG_MESSAGE_PHONE_GAME_START = FLAG_MESSAGE_PHONE_CURRENT_PLAYER_COUNT + 1;
 	
 	/* Matchmaker --> Phone */
 	public static final short FLAG_MESSAGE_MATCHMAKER_CONNECTION_CLOSE = 1;

@@ -36,8 +36,8 @@ public class CurrentPlayerCountPhoneMessage extends ClientMessage implements Aet
 	// Getter & Setter
 	// ===========================================================
 
-	public short getProtocolVersion() {
-		return this.mPlayerCount;
+	public void setPlayerCount(short pPlayerCount) {
+		this.mPlayerCount = pPlayerCount;
 	}
 
 	// ===========================================================
