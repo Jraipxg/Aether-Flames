@@ -13,6 +13,8 @@ import com.badlogic.gdx.physics.box2d.Body;
 
 public class SceneUpdateHandler implements IUpdateHandler
 {
+	protected static boolean purgeGame = false;
+	
 	final long timeBetweenExplosionCleanup = 350;//ms
 
 	long timeOfLastHealthDrop;
@@ -37,28 +39,52 @@ public class SceneUpdateHandler implements IUpdateHandler
 		}
 		if(userData.equals("delete"))
 		{
-			IEntity shape = pc.getShape();
-
-			AetherFlamesActivity.mPhysicsWorld.unregisterPhysicsConnector(pc);
-			AetherFlamesActivity.mPhysicsWorld.destroyBody(body);
-			AetherFlamesActivity.mScene.detachChild(shape);
+			destroy(pc);
 			
 			return true;
 		}
 		return false;
 	}
 	
+	void destroy(PhysicsConnector pc)
+	{
+		Body body = pc.getBody();
+		IEntity shape = pc.getShape();
+
+		AetherFlamesActivity.mPhysicsWorld.unregisterPhysicsConnector(pc);
+		AetherFlamesActivity.mPhysicsWorld.destroyBody(body);
+		AetherFlamesActivity.mScene.detachChild(shape);
+	}
+	
 	@Override
 	public void onUpdate(float pSecondsElapsed)
 	{
-		AetherFlamesActivity.mPhysicsWorld.onUpdate(pSecondsElapsed);
 		PhysicsConnectorManager pcm = AetherFlamesActivity.mPhysicsWorld.getPhysicsConnectorManager();
+		if(purgeGame)
+		{
+			for (Map.Entry<Integer,Ship> shipEntry : AetherFlamesActivity.ships.entrySet()) 
+			{
+				shipEntry.getValue().destroyShip(false);
+			}
+			
+			while(pcm.size() > 0)
+			{
+				destroy(pcm.get(0));
+			}
+
+			purgeGame = false;
+			AetherFlamesActivity.mScene.unregisterUpdateHandler(this);
+			return;
+		}
+		
+		AetherFlamesActivity.mPhysicsWorld.onUpdate(pSecondsElapsed);
+		
 		for(int i = 0; i < pcm.size(); i++)
 		{
 			PhysicsConnector pc = pcm.get(i);
 			if(deleted(pc))
-			{ 
-				continue;
+			{
+				i--;
 			}
 		}
 		
@@ -67,6 +93,18 @@ public class SceneUpdateHandler implements IUpdateHandler
 			Ship ship = shipEntry.getValue();
 			ship.updateStatusBars();
 			ship.regen();
+		}
+		
+		if(AetherFlamesActivity.ships.size() == 1)
+		{
+			Ship winner = AetherFlamesActivity.ships.entrySet().iterator().next().getValue();
+			final Text winText = new Text(AetherFlamesActivity.CAMERA_WIDTH/2, AetherFlamesActivity.CAMERA_HEIGHT/2, AetherFlamesActivity.mFont, "Player " + winner.id + " wins!", new TextOptions(HorizontalAlign.CENTER), AetherFlamesActivity.mVertexBufferObjectManager);
+			float textHeight = winText.getHeight();
+			float textWidth = winText.getWidth();
+			winText.setY(AetherFlamesActivity.CAMERA_HEIGHT/2 - textHeight/2);
+			winText.setX(AetherFlamesActivity.CAMERA_WIDTH/2 - textWidth/2);
+			AetherFlamesActivity.mScene.attachChild(winText);
+			AetherFlamesActivity.mGameEngine.stop();
 		}
 
 		long timeSinceLastHealthDrop = System.currentTimeMillis() - timeOfLastHealthDrop;

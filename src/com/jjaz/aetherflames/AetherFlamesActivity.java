@@ -3,6 +3,7 @@ package com.jjaz.aetherflames;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,7 +17,11 @@ import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
-import org.andengine.entity.sprite.AnimatedSprite;
+import org.andengine.entity.scene.menu.MenuScene;
+import org.andengine.entity.scene.menu.MenuScene.IOnMenuItemClickListener;
+import org.andengine.entity.scene.menu.item.IMenuItem;
+import org.andengine.entity.scene.menu.item.TextMenuItem;
+import org.andengine.entity.scene.menu.item.decorator.ColorMenuItemDecorator;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.text.Text;
 import org.andengine.entity.text.TextOptions;
@@ -40,6 +45,7 @@ import org.andengine.extension.physics.box2d.PhysicsFactory;
 import org.andengine.extension.physics.box2d.PhysicsWorld;
 import org.andengine.opengl.font.Font;
 import org.andengine.opengl.font.FontFactory;
+import org.andengine.opengl.texture.ITexture;
 import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
@@ -48,6 +54,7 @@ import org.andengine.opengl.texture.region.TiledTextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 import org.andengine.util.HorizontalAlign;
+import org.andengine.util.color.Color;
 import org.andengine.util.debug.Debug;
 
 import android.app.AlertDialog;
@@ -56,10 +63,10 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.opengl.GLES20;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -97,16 +104,27 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	// Fields
 	// ===========================================================
 
+	protected static AetherFlamesActivity afa; //I realize that this is silly.
+	protected static AetherFlamesMainMenu mMenuScene;
 	protected static Camera mCamera;
 	protected static Scene mScene;
 	protected static Engine mGameEngine;
 	protected static DistributedFixedStepPhysicsWorld mPhysicsWorld;
 	protected static VertexBufferObjectManager mVertexBufferObjectManager;
-	protected static Font mFont;
+	protected static Font mFont; //use lithos pro black
+	protected static ITexture fontTexture;
+	protected static Font mFontSmall; //use lithos pro black
+	protected static ITexture fontTextureSmall;
+
+	protected static BitmapTextureAtlas mInputBoxTexture;
+	protected static TiledTextureRegion mInputBoxTextureRegion;
 
 	protected static BitmapTextureAtlas mSpaceTexture;
 	protected static ITextureRegion mSpaceTextureRegion;
 
+	protected static BitmapTextureAtlas mTitleTexture;
+	protected static ITextureRegion mTitleTextureRegion;
+	
 	protected static BitmapTextureAtlas mShipTextures;
 	protected static TiledTextureRegion mShipTextureRegion;
 
@@ -151,12 +169,12 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	
 	public static Map<Integer, Ship> ships;
 	
-	private static final int DIALOG_CHOOSE_SERVER_OR_CLIENT_ID = 0;
-	private static final int DIALOG_ENTER_SERVER_IP_ID = DIALOG_CHOOSE_SERVER_OR_CLIENT_ID + 1;
-	private static final int DIALOG_SHOW_SERVER_IP_ID = DIALOG_ENTER_SERVER_IP_ID + 1;
-	private static final int DIALOG_GAME_OVER = DIALOG_SHOW_SERVER_IP_ID + 1;
+	protected static final int DIALOG_CHOOSE_SERVER_OR_CLIENT_ID = 0;
+	protected static final int DIALOG_ENTER_SERVER_IP_ID = DIALOG_CHOOSE_SERVER_OR_CLIENT_ID + 1;
+	protected static final int DIALOG_SHOW_SERVER_IP_ID = DIALOG_ENTER_SERVER_IP_ID + 1;
+	protected static final int DIALOG_GAME_OVER = DIALOG_SHOW_SERVER_IP_ID + 1;
 	
-	private String mServerIP = LOCALHOST_IP;
+	protected String mServerIP = LOCALHOST_IP;
 	private SocketServer<SocketConnectionClientConnector> mSocketServer;
 	private ServerConnector<SocketConnection> mServerConnector;
 
@@ -175,7 +193,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		engineOptions.getTouchOptions().setNeedsMultiTouch(true);
 		
 		if (WhyIsItDoingItTwice == 0) {
-			this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
+			//this.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
 			WhyIsItDoingItTwice = 1;
 		} 
 		
@@ -186,10 +204,19 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	public void onCreateResources()
 	{
 		BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/");
+		FontFactory.setAssetBasePath("font/");
 
 		AetherFlamesActivity.mSpaceTexture = new BitmapTextureAtlas(this.getTextureManager(), 960*2, 540, TextureOptions.BILINEAR);
 		AetherFlamesActivity.mSpaceTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mSpaceTexture, this, "spaceBackground.png", 0, 0);
 		AetherFlamesActivity.mSpaceTexture.load();
+		
+		AetherFlamesActivity.mTitleTexture = new BitmapTextureAtlas(this.getTextureManager(), 960*2, 540, TextureOptions.BILINEAR);
+		AetherFlamesActivity.mTitleTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mTitleTexture, this, "titleScreen.png", 0, 0);
+		AetherFlamesActivity.mTitleTexture.load();
+		
+		AetherFlamesActivity.mInputBoxTexture = new BitmapTextureAtlas(this.getTextureManager(), 256, 32, TextureOptions.BILINEAR);
+		AetherFlamesActivity.mInputBoxTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(AetherFlamesActivity.mInputBoxTexture, this, "textbox.png", 0, 0, 2, 1);
+		AetherFlamesActivity.mInputBoxTexture.load();
 		
 		AetherFlamesActivity.mShipTextures = new BitmapTextureAtlas(this.getTextureManager(), 512, 64, TextureOptions.BILINEAR);
 		AetherFlamesActivity.mShipTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(AetherFlamesActivity.mShipTextures, this, "ships.png", 0, 0, 8, 1);
@@ -237,13 +264,36 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		AetherFlamesActivity.mExplosionTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(AetherFlamesActivity.mExplosionTexture, this, "Explosion.png", 0, 0);
 		AetherFlamesActivity.mExplosionTexture.load();
 		
-		AetherFlamesActivity.mFont = FontFactory.create(this.getFontManager(), this.getTextureManager(), 256, 256, 30, true, Color.WHITE);
+		//AetherFlamesActivity.mFont = FontFactory.create(this.getFontManager(), this.getTextureManager(), 256, 256, 30, true, Color.WHITE);
+		AetherFlamesActivity.fontTexture = new BitmapTextureAtlas(this.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
+		AetherFlamesActivity.mFont = FontFactory.createFromAsset(this.getFontManager(), fontTexture, this.getAssets(), "lithosproblack.ttf", 60, true, android.graphics.Color.WHITE);
 		AetherFlamesActivity.mFont.load();
+		
+		AetherFlamesActivity.fontTextureSmall = new BitmapTextureAtlas(this.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
+		AetherFlamesActivity.mFontSmall = FontFactory.createFromAsset(this.getFontManager(), fontTextureSmall, this.getAssets(), "lithosproblack.ttf", 36, true, android.graphics.Color.WHITE);
+		AetherFlamesActivity.mFontSmall.load();
+	}
+
+	public static void makeDialog()
+	{
+		AetherFlamesActivity.afa.showDialog(DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
+	}
+	
+	@Override
+	public boolean onKeyDown(final int pKeyCode, final KeyEvent pEvent) {
+		if(pKeyCode == KeyEvent.KEYCODE_MENU && pEvent.getAction() == KeyEvent.ACTION_DOWN) {
+			this.createMenu();
+			return true;
+		} else {
+			return super.onKeyDown(pKeyCode, pEvent);
+		}
 	}
 
 	@Override
 	public Scene onCreateScene()
 	{
+		afa = this;
+		
 		AetherFlamesActivity.mGameEngine = this.mEngine;
 		AetherFlamesActivity.mGameEngine.registerUpdateHandler(new FPSLogger());
 
@@ -261,10 +311,13 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		
 		this.initBattlefield();
 		this.initWeaponSelection();
-		this.initShips();
-		this.initHUD();
-		
-		AetherFlamesActivity.mScene.registerUpdateHandler(this.mSceneUpdateHandler);
+		/*
+		InputText  password = new InputText(45.0f, 465.0f, "Password", "Enter password", AetherFlamesActivity.mInputBoxTextureRegion, AetherFlamesActivity.mFontSmall, 17, 19, AetherFlamesActivity.mVertexBufferObjectManager, AetherFlamesActivity.afa);
+		password.setPassword(false);
+		AetherFlamesActivity.mScene.attachChild(password);
+		AetherFlamesActivity.mScene.registerTouchArea(password);
+		*/
+		this.createMenu();
 		
 		return AetherFlamesActivity.mScene;
 	}
@@ -278,6 +331,11 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	protected void onCreate(final Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
 		
+	}
+	
+	protected static void quit()
+	{
+		AetherFlamesActivity.afa.finish();
 	}
 	
 	protected Dialog onCreateDialog(final int pID) {
@@ -435,7 +493,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		this.mSocketServer.start();
 	}
 
-	private void initClient() {
+	protected void initClient() {
 		try {
 			this.mServerConnector = new SocketConnectionServerConnector(new SocketConnection(new Socket(this.mServerIP, SERVER_PORT)), new ServerConnectorListener());
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE, ConnectionCloseServerMessage.class, new IServerMessageHandler<SocketConnection>() {
@@ -448,7 +506,17 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_GAME_START, GameStartServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
-					AetherFlamesActivity.this.startGame();
+					//AetherFlamesActivity.this.startGame();
+					ArrayList<Integer> colors = new ArrayList<Integer>();
+					colors.add(Ship.WHITE_SHIP);
+					colors.add(Ship.RED_SHIP);
+					colors.add(Ship.ORANGE_SHIP);
+					colors.add(Ship.YELLOW_SHIP);
+					colors.add(Ship.GREEN_SHIP);
+					colors.add(Ship.BLUE_SHIP);
+					colors.add(Ship.PURPLE_SHIP);
+					colors.add(Ship.BLACK_SHIP);
+					AetherFlamesActivity.createGame(colors, Ship.GREEN_SHIP);
 				}
 			});
 			
@@ -472,6 +540,39 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 				Toast.makeText(AetherFlamesActivity.this, pMessage, Toast.LENGTH_SHORT).show();
 			}
 		});
+	}
+	
+	protected void createMenu()
+	{
+		if(AetherFlamesActivity.mPhysicsWorld.getPhysicsConnectorManager().size() > 0)
+		{
+			destroyGame();
+		}
+		
+		if(AetherFlamesActivity.mMenuScene == null)
+		{
+			AetherFlamesActivity.mMenuScene = new AetherFlamesMainMenu();
+		}
+		AetherFlamesMainMenu.title.setVisible(true);
+		
+		AetherFlamesActivity.mScene.setChildScene(AetherFlamesActivity.mMenuScene, false, true, true);
+	}
+
+	protected static void destroyGame()
+	{
+		SceneUpdateHandler.purgeGame = true;
+		AetherFlamesActivity.mWeaponSelection.setVisible(false);
+		while(SceneUpdateHandler.purgeGame);
+	}
+	
+	protected static void createGame(ArrayList<Integer> colors, int playerID)
+	{
+		AetherFlamesActivity.afa.initShips(colors, playerID);
+		AetherFlamesActivity.afa.initHUD();
+		AetherFlamesActivity.mWeaponSelection.setVisible(true);
+		AetherFlamesMainMenu.title.setVisible(false);
+
+		AetherFlamesActivity.mScene.registerUpdateHandler(AetherFlamesActivity.afa.mSceneUpdateHandler);
 	}
 	
 	private void initHUD()
@@ -500,22 +601,87 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		AetherFlamesActivity.mWeaponSelection = new Sprite(AetherFlamesActivity.CAMERA_WIDTH - AetherFlamesActivity.WEAPON_SELECTION_BOX_SIZE, 0, AetherFlamesActivity.WEAPON_SELECTION_BOX_SIZE, AetherFlamesActivity.WEAPON_SELECTION_BOX_SIZE, AetherFlamesActivity.mWeaponSelectionTextureRegion, AetherFlamesActivity.mVertexBufferObjectManager);
 		AetherFlamesActivity.mWeaponSelection.setAlpha(0.5f);
 		AetherFlamesActivity.mScene.attachChild(AetherFlamesActivity.mWeaponSelection);
+		AetherFlamesActivity.mWeaponSelection.setVisible(false);
 	}
  
-	private void initShips()
+	private void initShips(ArrayList<Integer> shipColors, int shipColor)
 	{
-		AetherFlamesActivity.myShipColor = Ship.GREEN_SHIP; //TODO: set this on game configuration using network
+		AetherFlamesActivity.myShipColor = shipColor; //TODO: set this on game configuration using network
 
-		ships.put(Ship.WHITE_SHIP, new Ship(SHIP_START_PADDING, SHIP_START_PADDING, -45.0f, Ship.WHITE_SHIP));
-		ships.put(Ship.RED_SHIP, new Ship(WORLD_WIDTH/2, SHIP_START_PADDING, 0.0f, Ship.RED_SHIP));
-		ships.put(Ship.ORANGE_SHIP, new Ship(WORLD_WIDTH - SHIP_START_PADDING, SHIP_START_PADDING, 45.0f, Ship.ORANGE_SHIP));
+		ships.clear();
 		
-		ships.put(Ship.YELLOW_SHIP, new Ship(SHIP_START_PADDING, WORLD_HEIGHT/2, -90.0f, Ship.YELLOW_SHIP));
-		ships.put(Ship.GREEN_SHIP, new Ship(WORLD_WIDTH - SHIP_START_PADDING, WORLD_HEIGHT/2, 90.0f, Ship.GREEN_SHIP));
+		switch(shipColors.size())
+		{
+		case 1:
+		{
+			ships.put(Ship.WHITE_SHIP, new Ship(SHIP_START_PADDING, SHIP_START_PADDING, -45.0f, Ship.WHITE_SHIP)); 
+			break;
+		}
+		case 2:
+		{
+			ships.put(shipColors.get(0), new Ship(SHIP_START_PADDING, WORLD_HEIGHT/2, -90.0f, shipColors.get(0)));
+			ships.put(shipColors.get(1), new Ship(WORLD_WIDTH - SHIP_START_PADDING, WORLD_HEIGHT/2, 90.0f, shipColors.get(1)));
+			break;
+		}
+		case 3:
+		{
+			ships.put(shipColors.get(0), new Ship(SHIP_START_PADDING, SHIP_START_PADDING, -45.0f, shipColors.get(0)));
+			ships.put(shipColors.get(1), new Ship(WORLD_WIDTH - SHIP_START_PADDING, SHIP_START_PADDING, 45.0f, shipColors.get(1)));
+			ships.put(shipColors.get(2), new Ship(WORLD_WIDTH/2, WORLD_HEIGHT - SHIP_START_PADDING, 180.0f, shipColors.get(2)));
+			break;
+		}
+		case 4:
+		{
+			ships.put(shipColors.get(0), new Ship(WORLD_WIDTH/2, SHIP_START_PADDING, 0.0f, shipColors.get(0)));
+			ships.put(shipColors.get(1), new Ship(SHIP_START_PADDING, WORLD_HEIGHT/2, -90.0f, shipColors.get(1)));
+			ships.put(shipColors.get(2), new Ship(WORLD_WIDTH - SHIP_START_PADDING, WORLD_HEIGHT/2, 90.0f, shipColors.get(2)));
+			ships.put(shipColors.get(3), new Ship(WORLD_WIDTH/2, WORLD_HEIGHT - SHIP_START_PADDING, 180.0f, shipColors.get(3)));
+			break;
+		}
+		case 5:
+		{
+			ships.put(shipColors.get(0), new Ship(SHIP_START_PADDING, SHIP_START_PADDING, -45.0f, shipColors.get(0)));
+			ships.put(shipColors.get(1), new Ship(WORLD_WIDTH/2, SHIP_START_PADDING, 0.0f, shipColors.get(1)));
+			ships.put(shipColors.get(2), new Ship(SHIP_START_PADDING, WORLD_HEIGHT/2, -90.0f, shipColors.get(2)));
+			ships.put(shipColors.get(3), new Ship(WORLD_WIDTH - SHIP_START_PADDING, WORLD_HEIGHT/2, 90.0f, shipColors.get(3)));
+			ships.put(shipColors.get(4), new Ship(WORLD_WIDTH/2, WORLD_HEIGHT - SHIP_START_PADDING, 180.0f, shipColors.get(4)));
+			break;
+		}
+		case 6:
+		{
+			ships.put(shipColors.get(0), new Ship(SHIP_START_PADDING, SHIP_START_PADDING, -45.0f, shipColors.get(0)));
+			ships.put(shipColors.get(1), new Ship(WORLD_WIDTH/2, SHIP_START_PADDING, 0.0f, shipColors.get(1)));
+			ships.put(shipColors.get(2), new Ship(WORLD_WIDTH - SHIP_START_PADDING, SHIP_START_PADDING, 45.0f, shipColors.get(2)));
+			ships.put(shipColors.get(3), new Ship(SHIP_START_PADDING, WORLD_HEIGHT/2, -90.0f, shipColors.get(3)));
+			ships.put(shipColors.get(4), new Ship(WORLD_WIDTH - SHIP_START_PADDING, WORLD_HEIGHT/2, 90.0f, shipColors.get(4)));
+			ships.put(shipColors.get(5), new Ship(WORLD_WIDTH/2, WORLD_HEIGHT - SHIP_START_PADDING, 180.0f, shipColors.get(5)));
+			break;
+		}
+		case 7:
+		{
+			ships.put(shipColors.get(0), new Ship(SHIP_START_PADDING, SHIP_START_PADDING, -45.0f, shipColors.get(0)));
+			ships.put(shipColors.get(1), new Ship(WORLD_WIDTH/2, SHIP_START_PADDING, 0.0f, shipColors.get(1)));
+			ships.put(shipColors.get(2), new Ship(WORLD_WIDTH - SHIP_START_PADDING, SHIP_START_PADDING, 45.0f, shipColors.get(2)));
+			ships.put(shipColors.get(3), new Ship(SHIP_START_PADDING, WORLD_HEIGHT/2, -90.0f, shipColors.get(3)));
+			ships.put(shipColors.get(4), new Ship(WORLD_WIDTH - SHIP_START_PADDING, WORLD_HEIGHT/2, 90.0f, shipColors.get(4)));
+			ships.put(shipColors.get(5), new Ship(SHIP_START_PADDING, WORLD_HEIGHT - SHIP_START_PADDING, -135.0f, shipColors.get(5)));
+			ships.put(shipColors.get(6), new Ship(WORLD_WIDTH/2, WORLD_HEIGHT - SHIP_START_PADDING, 180.0f, shipColors.get(6)));
+			break;
+		}
+		case 8:
+		{
+			ships.put(shipColors.get(0), new Ship(SHIP_START_PADDING, SHIP_START_PADDING, -45.0f, shipColors.get(0)));
+			ships.put(shipColors.get(1), new Ship(WORLD_WIDTH/2, SHIP_START_PADDING, 0.0f, shipColors.get(1)));
+			ships.put(shipColors.get(2), new Ship(WORLD_WIDTH - SHIP_START_PADDING, SHIP_START_PADDING, 45.0f, shipColors.get(2)));
+			ships.put(shipColors.get(3), new Ship(SHIP_START_PADDING, WORLD_HEIGHT/2, -90.0f, shipColors.get(3)));
+			ships.put(shipColors.get(4), new Ship(WORLD_WIDTH - SHIP_START_PADDING, WORLD_HEIGHT/2, 90.0f, shipColors.get(4)));
+			ships.put(shipColors.get(5), new Ship(SHIP_START_PADDING, WORLD_HEIGHT - SHIP_START_PADDING, -135.0f, shipColors.get(5)));
+			ships.put(shipColors.get(6), new Ship(WORLD_WIDTH/2, WORLD_HEIGHT - SHIP_START_PADDING, 180.0f, shipColors.get(6)));
+			ships.put(shipColors.get(7), new Ship(WORLD_WIDTH - SHIP_START_PADDING, WORLD_HEIGHT - SHIP_START_PADDING, 135.0f, shipColors.get(7)));
+			break;
+		}
+		}
 		
-		ships.put(Ship.BLUE_SHIP, new Ship(SHIP_START_PADDING, WORLD_HEIGHT - SHIP_START_PADDING, -135.0f, Ship.BLUE_SHIP));
-		ships.put(Ship.PURPLE_SHIP, new Ship(WORLD_WIDTH/2, WORLD_HEIGHT - SHIP_START_PADDING, 180.0f, Ship.PURPLE_SHIP));
-		ships.put(Ship.BLACK_SHIP, new Ship(WORLD_WIDTH - SHIP_START_PADDING, WORLD_HEIGHT - SHIP_START_PADDING, 135.0f, Ship.BLACK_SHIP));
 		
 		AetherFlamesActivity.mPhysicsWorld.setID(AetherFlamesActivity.myShipColor);
 		AetherFlamesActivity.mPhysicsWorld.setShips(ships);

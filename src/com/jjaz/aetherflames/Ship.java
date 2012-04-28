@@ -117,7 +117,7 @@ public class Ship implements AetherFlamesConstants
 		}
 	}
 	
-	void destroyShip()
+	void destroyShip(boolean explode)
 	{
 		body.setUserData("delete");
 		AetherFlamesActivity.mScene.detachChild(healthBar);
@@ -126,7 +126,11 @@ public class Ship implements AetherFlamesConstants
 		AetherFlamesActivity.mScene.detachChild(energyBarBackground);
 		AetherFlamesActivity.ships.remove(id);
 		AetherFlamesActivity.mPhysicsWorld.removeShip(id);
-		CollisionHandler.drawExplosion(body.getWorldCenter().cpy().mul(AetherFlamesActivity.WORLD_TO_CAMERA), SHIP_SIZE*2*AetherFlamesActivity.CAMERA_TO_WORLD);
+		
+		if(explode)
+		{
+			CollisionHandler.drawExplosion(body.getWorldCenter().cpy().mul(AetherFlamesActivity.WORLD_TO_CAMERA), SHIP_SIZE*2*AetherFlamesActivity.CAMERA_TO_WORLD);
+		}
 	}
 	
 	public void damage(int amount)
@@ -144,7 +148,7 @@ public class Ship implements AetherFlamesConstants
 				ep = 0;
 				if(hp <= 0)
 				{
-					destroyShip();
+					destroyShip(true);
 				}
 			}
 		}
@@ -153,7 +157,7 @@ public class Ship implements AetherFlamesConstants
 		hp -= amount;
 		if(hp <= 0)
 		{
-			destroyShip();
+			destroyShip(true);
 		}
 	}
 	
@@ -289,8 +293,8 @@ public class Ship implements AetherFlamesConstants
 				int bulletID = AetherFlamesActivity.mPhysicsWorld.nextBulletID();
 				ep -= currentWeapon.COST;
 				Body bulletBody = currentWeapon.fire(bulletID, barrelPosition(), body.getLinearVelocity(), body.getAngle());
-				AetherFlamesActivity.mPhysicsWorld.registerBullet(bulletID, currentWeapon.getType(), bulletBody,
-						barrelPosition(), body.getLinearVelocity(), body.getAngle());
+				//AetherFlamesActivity.mPhysicsWorld.registerBullet(bulletID, currentWeapon.getType(), bulletBody,
+				//		barrelPosition(), body.getLinearVelocity(), body.getAngle());
 				weaponCooldownOver = System.currentTimeMillis() + currentWeapon.COOLDOWN;
 			}
 		}
