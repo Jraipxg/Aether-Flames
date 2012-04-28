@@ -716,10 +716,10 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	private class ServerConnectorListener implements ISocketConnectionServerConnectorListener {
 		@Override
 		public void onStarted(final ServerConnector<SocketConnection> pConnector) {
-			AetherFlamesActivity.this.toast("CLIENT: Connected to server.");
 			final ConnectionEstablishClientMessage connectionEstablishClientMessage = (ConnectionEstablishClientMessage)AetherFlamesActivity.this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_CONNECTION_ESTABLISH);
 			connectionEstablishClientMessage.setProtocolVersion(PROTOCOL_VERSION);
 			try {
+				AetherFlamesActivity.this.toast("CLIENT: Connected to server at " + WifiUtils.getWifiIPv4Address(AetherFlamesActivity.afa));
 				AetherFlamesActivity.this.mServerConnector.sendClientMessage(connectionEstablishClientMessage);
 			} catch (IOException e) {
 				Debug.e(e);
