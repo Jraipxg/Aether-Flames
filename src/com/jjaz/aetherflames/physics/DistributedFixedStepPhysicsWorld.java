@@ -214,9 +214,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		int messageFrame = message.mFrameNum;
 		int currentFrame = this.mFrameNum;
 		
-		if (currentFrame - messageFrame > MAX_GAME_STATE_DELAY) {
-			return;
-		} else if (currentFrame < messageFrame) {
+		if (currentFrame < messageFrame) {
 			this.mFrameNum = messageFrame;
 			currentFrame = messageFrame;
 		}
@@ -253,9 +251,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		int messageFrame = message.mFrameNum;
 		int currentFrame = this.mFrameNum;
 		
-		if (currentFrame - messageFrame > MAX_GAME_STATE_DELAY) {
-			return;
-		} else if (currentFrame < messageFrame) {
+		if (currentFrame < messageFrame) {
 			this.mFrameNum = messageFrame;
 			currentFrame = messageFrame;
 		} 

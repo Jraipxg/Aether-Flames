@@ -103,7 +103,7 @@ public class SceneUpdateHandler implements IUpdateHandler
 			float textWidth = winText.getWidth();
 			winText.setY(AetherFlamesActivity.CAMERA_HEIGHT/2 - textHeight/2);
 			winText.setX(AetherFlamesActivity.CAMERA_WIDTH/2 - textWidth/2);
-			AetherFlamesActivity.mPhysicsWorld.
+			AetherFlamesActivity.mPhysicsWorld.reportState();
 			AetherFlamesActivity.mScene.attachChild(winText);
 			AetherFlamesActivity.mGameEngine.stop();
 		}
