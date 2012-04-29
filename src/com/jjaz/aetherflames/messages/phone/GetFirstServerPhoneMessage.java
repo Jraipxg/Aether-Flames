@@ -17,6 +17,8 @@ public class GetFirstServerPhoneMessage extends ClientMessage implements AetherF
 	// Fields
 	// ===========================================================
 
+	private short mDesiredNumPlayers;
+	
 	// ===========================================================
 	// Constructors
 	// ===========================================================
@@ -25,10 +27,23 @@ public class GetFirstServerPhoneMessage extends ClientMessage implements AetherF
 		// intentionally empty
 	}
 
+
+	public GetFirstServerPhoneMessage(final short pDesiredNumPlayers) {
+		mDesiredNumPlayers = pDesiredNumPlayers;
+	}
+	
 	// ===========================================================
 	// Getter & Setter
 	// ===========================================================
 
+	public void SetDesiredPlayers(final short pDesiredNumPlayers) {
+		mDesiredNumPlayers = pDesiredNumPlayers;
+	}
+	
+	public short GetDesiredPlayers() {
+		return mDesiredNumPlayers;
+	}
+	
 	// ===========================================================
 	// Methods for/from SuperClass/Interfaces
 	// ===========================================================
@@ -40,12 +55,12 @@ public class GetFirstServerPhoneMessage extends ClientMessage implements AetherF
 
 	@Override
 	protected void onReadTransmissionData(final DataInputStream pDataInputStream) throws IOException {
-		// nothing to read
+		mDesiredNumPlayers = pDataInputStream.readShort();
 	}
 
 	@Override
 	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream) throws IOException {
-		// nothing to write
+		pDataOutputStream.writeShort(mDesiredNumPlayers);
 	}
 
 	// ===========================================================
