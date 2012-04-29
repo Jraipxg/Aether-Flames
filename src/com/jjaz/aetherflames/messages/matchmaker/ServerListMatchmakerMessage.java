@@ -3,10 +3,15 @@ package com.jjaz.aetherflames.messages.matchmaker;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.HashMap;
 
 import org.andengine.extension.multiplayer.protocol.adt.message.server.ServerMessage;
+import org.andengine.util.debug.Debug;
 
 import com.jjaz.aetherflames.AetherFlamesConstants;
+import com.jjaz.aetherflames.GameServer;
 
 public class ServerListMatchmakerMessage extends ServerMessage implements AetherFlamesConstants {
 	// ===========================================================
@@ -17,7 +22,7 @@ public class ServerListMatchmakerMessage extends ServerMessage implements Aether
 	// Fields
 	// ===========================================================
 
-	private String mServerName;
+	public HashMap<String, GameServer> mServerList;
 
 	// ===========================================================
 	// Constructors
@@ -28,16 +33,16 @@ public class ServerListMatchmakerMessage extends ServerMessage implements Aether
 
 	}
 
-	public ServerListMatchmakerMessage(final String pServerName) {
-		this.mServerName = pServerName;
+	public ServerListMatchmakerMessage(final HashMap<String, GameServer> pServerList) {
+		this.mServerList = pServerList;
 	}
 
 	// ===========================================================
 	// Getter & Setter
 	// ===========================================================
 
-	public String getProtocolVersion() {
-		return this.mServerName;
+	public void setServerList(HashMap<String, GameServer> pServerList) {
+		this.mServerList = pServerList;
 	}
 
 	// ===========================================================
@@ -51,12 +56,18 @@ public class ServerListMatchmakerMessage extends ServerMessage implements Aether
 
 	@Override
 	protected void onReadTransmissionData(final DataInputStream pDataInputStream) throws IOException {
-		this.mServerName = pDataInputStream.readLine();
+		ObjectInputStream reader = new ObjectInputStream(pDataInputStream);
+		try {
+			this.mServerList = (HashMap<String, GameServer>) reader.readObject();
+		} catch (ClassNotFoundException e) {
+			Debug.e(e);
+		}
 	}
 
 	@Override
 	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream) throws IOException {
-		pDataOutputStream.writeChars(this.mServerName);
+		ObjectOutputStream writer = new ObjectOutputStream(pDataOutputStream);
+		writer.writeObject(this.mServerList);
 	}
 
 	// ===========================================================

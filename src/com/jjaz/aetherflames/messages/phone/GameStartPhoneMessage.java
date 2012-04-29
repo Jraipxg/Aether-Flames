@@ -12,34 +12,31 @@ import org.andengine.util.debug.Debug;
 import com.jjaz.aetherflames.AetherFlamesConstants;
 import com.jjaz.aetherflames.GameServer;
 
-public class CurrentPlayerCountPhoneMessage extends ClientMessage implements AetherFlamesConstants {
-	// ===========================================================
-	// Constants
-	// ===========================================================
-
-	// ===========================================================
-	// Fields
-	// ===========================================================
+public class GameStartPhoneMessage extends ClientMessage implements AetherFlamesConstants {
 
 	public GameServer mServer;
 	
-	// ===========================================================
-	// Constructors
-	// ===========================================================
-
-	public CurrentPlayerCountPhoneMessage() {
+	/**
+	 * C'tor
+	 */
+	public GameStartPhoneMessage() {
 		// intentionally empty
 	}
 	
-	public CurrentPlayerCountPhoneMessage(final GameServer pServer)
-	{
-		mServer = pServer;
+	/**
+	 * C'tor
+	 * 
+	 * @param pServer Server that is starting game.
+	 */
+	public GameStartPhoneMessage(final GameServer pServer) {
+		this.mServer = pServer;
 	}
-
-	// ===========================================================
-	// Getter & Setter
-	// ===========================================================
 	
+	/**
+	 * Setter.
+	 * 
+	 * @param start True to start game.
+	 */	
 	public void setServer(final GameServer pServer) {
 		mServer = pServer;
 	}
@@ -50,7 +47,7 @@ public class CurrentPlayerCountPhoneMessage extends ClientMessage implements Aet
 
 	@Override
 	public short getFlag() {
-		return FLAG_MESSAGE_PHONE_CURRENT_PLAYER_COUNT;
+		return FLAG_MESSAGE_PHONE_GAME_START;
 	}
 
 	@Override
@@ -68,12 +65,5 @@ public class CurrentPlayerCountPhoneMessage extends ClientMessage implements Aet
 		ObjectOutputStream writer = new ObjectOutputStream(pDataOutputStream);
 		writer.writeObject(this.mServer);
 	}
-
-	// ===========================================================
-	// Methods
-	// ===========================================================
-
-	// ===========================================================
-	// Inner and Anonymous Classes
-	// ===========================================================
+	
 }

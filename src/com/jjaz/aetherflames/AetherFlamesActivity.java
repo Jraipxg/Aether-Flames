@@ -90,8 +90,10 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	protected static Camera mCamera;
 	protected static Scene mScene;
 	protected static Engine mGameEngine;
+	protected static MatchmakerClient matchmaker;
 	protected static DistributedFixedStepPhysicsWorld mPhysicsWorld;
 	protected static VertexBufferObjectManager mVertexBufferObjectManager;
+	
 	protected static Font mFont; //use lithos pro black
 	protected static ITexture fontTexture;
 	protected static Font mFontSmall; //use lithos pro black
@@ -280,6 +282,8 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		
 		AetherFlamesActivity.mVertexBufferObjectManager = this.getVertexBufferObjectManager();
 		AetherFlamesActivity.mPhysicsWorld = new DistributedFixedStepPhysicsWorld(30, new Vector2(0, 0), false, 8, 1);
+		
+		matchmaker = new MatchmakerClient();
 
 		this.mCollisionHandler = new CollisionHandler();
 		this.mSceneUpdateHandler = new SceneUpdateHandler();
@@ -447,7 +451,8 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		AetherFlamesActivity.mPhysicsWorld.startGame();
 	}
 	
-	protected void initServerAndClient(int numPlayers) {
+	protected void initServerAndClient(GameServer gs) {
+		int numPlayers = gs.getMaxPlayers();
 		this.initServer(numPlayers);
 
 		/* Wait some time after the server has been started, so it actually can start up. */
@@ -457,7 +462,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 			Debug.e(t);
 		}
 
-		this.initClient();
+		this.initClient(gs);
 	}
 
 	private void initServer(int numPlayers) {
@@ -472,10 +477,10 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		this.mSocketServer.start();
 	}
 
-	protected void initClient() {
+	protected void initClient(GameServer gs) {
 		mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_CONNECTION_ESTABLISH, ConnectionEstablishClientMessage.class);
 		try {
-			this.mServerConnector = new SocketConnectionServerConnector(new SocketConnection(new Socket(this.mServerIP, SERVER_PORT)), new ServerConnectorListener());
+			this.mServerConnector = new SocketConnectionServerConnector(new SocketConnection(new Socket(gs.getMyIP(), SERVER_PORT)), new ServerConnectorListener());
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE, ConnectionCloseServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
@@ -529,7 +534,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		Debug.d(pMessage);
 	}
 
-	private void toast(final String pMessage) {
+	void toast(final String pMessage) {
 		this.log(pMessage);
 		this.runOnUiThread(new Runnable() {
 			@Override
