@@ -1,50 +1,83 @@
 package com.jjaz.aetherflames;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.andengine.extension.multiplayer.protocol.adt.message.IMessage;
 import org.andengine.extension.multiplayer.protocol.adt.message.server.IServerMessage;
 import org.andengine.extension.multiplayer.protocol.client.IServerMessageHandler;
 import org.andengine.extension.multiplayer.protocol.client.connector.ServerConnector;
+import org.andengine.extension.multiplayer.protocol.client.connector.SocketConnectionServerConnector;
+import org.andengine.extension.multiplayer.protocol.client.connector.SocketConnectionServerConnector.ISocketConnectionServerConnectorListener;
 import org.andengine.extension.multiplayer.protocol.shared.SocketConnection;
 import org.andengine.extension.multiplayer.protocol.util.MessagePool;
+import org.andengine.extension.multiplayer.protocol.util.WifiUtils;
 import org.andengine.util.debug.Debug;
 
 import com.jjaz.aetherflames.AetherFlamesConstants;
 import com.jjaz.aetherflames.messages.phone.*;
+import com.jjaz.aetherflames.messages.client.ConnectionEstablishClientMessage;
 import com.jjaz.aetherflames.messages.matchmaker.*;
 
 public class MatchmakerClient implements AetherFlamesConstants {
 
 	// Networking variables
-	private ServerConnector<SocketConnection> mMatchmakerConnector;
-	private MessagePool<IMessage> mMessagePool;
-	boolean matchmakerFound;
+	private static final String MATCHMAKER_IP_ADDRESS = "192.168.42.244";
+	private static final int MATCHMAKER_PORT = 5555;
+	private static ServerConnector<SocketConnection> mMatchmakerConnector;
+	private static MessagePool<IMessage> mMessagePool;
+	static boolean matchmakerFound;
+	static ReentrantLock talkingToMatchmakerLock = new ReentrantLock();
+	static Condition doneTalkingToMatchmaker = talkingToMatchmakerLock.newCondition();
+	static boolean matchmakerCommunicationComplete;
+	
+	static GameServer server;
+	static HashMap<String, GameServer> serverList;
 	
 	public MatchmakerClient() {
 		matchmakerFound = false;
-		this.mMessagePool = new MessagePool<IMessage>();
+		MatchmakerClient.mMessagePool = new MessagePool<IMessage>();
 		
 		initMessagePool();
+		
+		try
+		{
+			MatchmakerClient.mMatchmakerConnector = new SocketConnectionServerConnector(new SocketConnection(new Socket(MATCHMAKER_IP_ADDRESS, MATCHMAKER_PORT)), new MatchmakerConnectorListener());
+		}
+		catch (UnknownHostException e)
+		{
+			e.printStackTrace();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		
+		registerMessageHandlers();
 	}
 	
 	/**
 	 * Initializes the message pool
 	 */
-	private void initMessagePool() {
-		this.mMessagePool.registerMessage(FLAG_MESSAGE_PHONE_CONNECTION_CLOSE, ConnectionClosePhoneMessage.class);
-		this.mMessagePool.registerMessage(FLAG_MESSAGE_PHONE_CONNECTION_ESTABLISH, ConnectionEstablishPhoneMessage.class);
-		this.mMessagePool.registerMessage(FLAG_MESSAGE_PHONE_CURRENT_PLAYER_COUNT, CurrentPlayerCountPhoneMessage.class);
-		this.mMessagePool.registerMessage(FLAG_MESSAGE_PHONE_GET_FIRST_SERVER, GetFirstServerPhoneMessage.class);
-		this.mMessagePool.registerMessage(FLAG_MESSAGE_PHONE_GET_SERVER_LIST, GetServerListPhoneMessage.class);
-		this.mMessagePool.registerMessage(FLAG_MESSAGE_PHONE_START_SERVER, StartServerPhoneMessage.class);
+	private static void initMessagePool() {
+		MatchmakerClient.mMessagePool.registerMessage(FLAG_MESSAGE_PHONE_CONNECTION_CLOSE, ConnectionClosePhoneMessage.class);
+		MatchmakerClient.mMessagePool.registerMessage(FLAG_MESSAGE_PHONE_CONNECTION_ESTABLISH, ConnectionEstablishPhoneMessage.class);
+		MatchmakerClient.mMessagePool.registerMessage(FLAG_MESSAGE_PHONE_CURRENT_PLAYER_COUNT, CurrentPlayerCountPhoneMessage.class);
+		MatchmakerClient.mMessagePool.registerMessage(FLAG_MESSAGE_PHONE_GET_FIRST_SERVER, GetFirstServerPhoneMessage.class);
+		MatchmakerClient.mMessagePool.registerMessage(FLAG_MESSAGE_PHONE_GET_SERVER_LIST, GetServerListPhoneMessage.class);
+		MatchmakerClient.mMessagePool.registerMessage(FLAG_MESSAGE_PHONE_START_SERVER, StartServerPhoneMessage.class);
 	}
 	
 
 	/**
 	 * Registers all matchmaker messages to be handled by this client
 	 */
-	private void registerMessageHandlers() {
+	private static void registerMessageHandlers() {
 		try {
 			/*this.mMatchmakerConnector.registerServerMessage(FLAG_MESSAGE_MATCHMAKER_CONNECTION_CLOSE, ConnectionCloseMatchmakerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
@@ -53,24 +86,24 @@ public class MatchmakerClient implements AetherFlamesConstants {
 					DistributedFixedStepPhysicsWorld.this.handleGameStateMessage(gameStateMessage);
 				}
 			});*/
-			this.mMatchmakerConnector.registerServerMessage(FLAG_MESSAGE_MATCHMAKER_CONNECTION_ESTABLISH, ConnectionEstablishMatchmakerMessage.class, new IServerMessageHandler<SocketConnection>() {
+			MatchmakerClient.mMatchmakerConnector.registerServerMessage(FLAG_MESSAGE_MATCHMAKER_CONNECTION_ESTABLISH, ConnectionEstablishMatchmakerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
-					MatchmakerClient.this.matchmakerFound = true; // connection established
+					MatchmakerClient.matchmakerFound = true; // connection established
 				}
 			});
-			this.mMatchmakerConnector.registerServerMessage(FLAG_MESSAGE_MATCHMAKER_FREE_SERVER, FreeServerMatchmakerMessage.class, new IServerMessageHandler<SocketConnection>() {
+			MatchmakerClient.mMatchmakerConnector.registerServerMessage(FLAG_MESSAGE_MATCHMAKER_FREE_SERVER, FreeServerMatchmakerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
 					final FreeServerMatchmakerMessage freeServerMessage = (FreeServerMatchmakerMessage)pServerMessage;
-					MatchmakerClient.this.handleFreeServerMessage(freeServerMessage);
+					MatchmakerClient.handleFreeServerMessage(freeServerMessage);
 				}
 			});
-			this.mMatchmakerConnector.registerServerMessage(FLAG_MESSAGE_MATCHMAKER_SERVER_LIST, ServerListMatchmakerMessage.class, new IServerMessageHandler<SocketConnection>() {
+			MatchmakerClient.mMatchmakerConnector.registerServerMessage(FLAG_MESSAGE_MATCHMAKER_SERVER_LIST, ServerListMatchmakerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
 					final ServerListMatchmakerMessage serverListMessage = (ServerListMatchmakerMessage)pServerMessage;
-					MatchmakerClient.this.handleServerListMessage(serverListMessage);
+					MatchmakerClient.handleServerListMessage(serverListMessage);
 				}
 			});
 
@@ -85,8 +118,19 @@ public class MatchmakerClient implements AetherFlamesConstants {
 	 * 
 	 * @param message The message to handle
 	 */
-	public void handleFreeServerMessage(FreeServerMatchmakerMessage message) {
-
+	public static void handleFreeServerMessage(FreeServerMatchmakerMessage message) {
+		server = message.mServer;
+		
+		try
+		{
+			talkingToMatchmakerLock.lock();
+			matchmakerCommunicationComplete = true;
+			doneTalkingToMatchmaker.signalAll();
+		}
+		finally
+		{
+			talkingToMatchmakerLock.unlock();
+		}
 	}
 
 	/**
@@ -95,54 +139,106 @@ public class MatchmakerClient implements AetherFlamesConstants {
 	 * 
 	 * @param message The message to handle
 	 */
-	public void handleServerListMessage(ServerListMatchmakerMessage message) {
-
+	public static void handleServerListMessage(ServerListMatchmakerMessage message) {
+		serverList = message.mServerList;
+		
+		try
+		{
+			talkingToMatchmakerLock.lock();
+			matchmakerCommunicationComplete = true;
+			doneTalkingToMatchmaker.signalAll();
+		}
+		finally
+		{
+			talkingToMatchmakerLock.unlock();
+		}
 	}
 	
 	/**
 	 * Should return a single server, however that is structured.
 	 */
-	public void requestSingleServer() {
-		GetFirstServerPhoneMessage message = (GetFirstServerPhoneMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_GET_FIRST_SERVER);
-		
+	public static GameServer requestSingleServer(int numPlayersDesired) {
+		GetFirstServerPhoneMessage message = (GetFirstServerPhoneMessage)MatchmakerClient.mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_GET_FIRST_SERVER);
+		message.SetDesiredPlayers((short) numPlayersDesired);
+		matchmakerCommunicationComplete = false;
 		// send the message
 		try {
-			this.mMatchmakerConnector.sendClientMessage(message);
-			this.mMessagePool.recycleMessage(message);
+			MatchmakerClient.mMatchmakerConnector.sendClientMessage(message);
+			MatchmakerClient.mMessagePool.recycleMessage(message);
 		} catch (IOException e) {
 			Debug.e(e);
 		}
 		
 		// SHOULD WAIT HERE FOR THE RESPONSE AND RETURN THAT SERVER
+		//try
+		{
+			//talkingToMatchmakerLock.lock();
+			while(!matchmakerCommunicationComplete)
+			{
+				//doneTalkingToMatchmaker.await();
+			}
+		}
+		//catch (InterruptedException e)
+		{
+			//e.printStackTrace();
+		}
+		//finally
+		{
+			//talkingToMatchmakerLock.unlock();
+		}
+		
+		return server;
 	}
 	
 	/**
 	 * Should return a server list, however that is structured.
 	 */
-	public void requestServerList() {
-		GetServerListPhoneMessage message = (GetServerListPhoneMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_GET_SERVER_LIST);
+	public static HashMap<String, GameServer> requestServerList() {
+		GetServerListPhoneMessage message = (GetServerListPhoneMessage)MatchmakerClient.mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_GET_SERVER_LIST);
 		
 		// send the message
 		try {
-			this.mMatchmakerConnector.sendClientMessage(message);
-			this.mMessagePool.recycleMessage(message);
+			MatchmakerClient.mMatchmakerConnector.sendClientMessage(message);
+			MatchmakerClient.mMessagePool.recycleMessage(message);
 		} catch (IOException e) {
 			Debug.e(e);
 		}
 		
 		// SHOULD WAIT HERE FOR THE RESPONSE AND RETURN THAT LIST
+		try
+		{
+			talkingToMatchmakerLock.lock();
+			matchmakerCommunicationComplete = false;
+			while(!matchmakerCommunicationComplete)
+			{
+				doneTalkingToMatchmaker.await();
+			}
+		}
+		catch (InterruptedException e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			talkingToMatchmakerLock.unlock();
+		}
+		
+		return serverList;
 	}
 	
 	/**
 	 * Inform the matchmaker that this phone is a server.
+	 * @param numPlayersDesired 
 	 */
-	public void startServer() {
-		StartServerPhoneMessage message = (StartServerPhoneMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_START_SERVER);
+	public static void startServer(GameServer gs) {
+		StartServerPhoneMessage message = (StartServerPhoneMessage)MatchmakerClient.mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_START_SERVER);
+		
+		message.mServer = gs;
 		
 		// send the message
 		try {
-			this.mMatchmakerConnector.sendClientMessage(message);
-			this.mMessagePool.recycleMessage(message);
+			MatchmakerClient.mMatchmakerConnector.sendClientMessage(message);
+			MatchmakerClient.mMessagePool.recycleMessage(message);
 		} catch (IOException e) {
 			Debug.e(e);
 		}
@@ -155,15 +251,15 @@ public class MatchmakerClient implements AetherFlamesConstants {
 	 * 
 	 * @param numPlayers Current number of players on the server.
 	 */
-	public void setPlayerCount(short numPlayers) {
-		CurrentPlayerCountPhoneMessage message = (CurrentPlayerCountPhoneMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_CURRENT_PLAYER_COUNT);
+	public static void setPlayerCount(short numPlayers) {
+		CurrentPlayerCountPhoneMessage message = (CurrentPlayerCountPhoneMessage)MatchmakerClient.mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_CURRENT_PLAYER_COUNT);
 		
 		// TODO: CREATE A GAMESERVER OBJECT AND SET THE NUMBER OF PLAYERS IN IT AND ADD IT TO THE MESSAGE
 		
 		// send the message
 		try {
-			this.mMatchmakerConnector.sendClientMessage(message);
-			this.mMessagePool.recycleMessage(message);
+			MatchmakerClient.mMatchmakerConnector.sendClientMessage(message);
+			MatchmakerClient.mMessagePool.recycleMessage(message);
 		} catch (IOException e) {
 			Debug.e(e);
 		}
@@ -172,23 +268,37 @@ public class MatchmakerClient implements AetherFlamesConstants {
 	/**
 	 * Close the connection on starting a game.
 	 */
-	public void startGame() {
-		ConnectionClosePhoneMessage message = (ConnectionClosePhoneMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_CONNECTION_CLOSE);
+	public static void startGame() {
+		ConnectionClosePhoneMessage message = (ConnectionClosePhoneMessage)mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_CONNECTION_CLOSE);
 		
 		// send the message
 		try {
-			this.mMatchmakerConnector.sendClientMessage(message);
-			this.mMessagePool.recycleMessage(message);
-			this.mMatchmakerConnector.terminate(); // don't need this forever
+			mMatchmakerConnector.sendClientMessage(message);
+			mMessagePool.recycleMessage(message);
+			mMatchmakerConnector.terminate(); // don't need this forever
 		} catch (IOException e) {
 			Debug.e(e);
 		}
 	}
 	
-	public void setServerConnector(ServerConnector<SocketConnection> connector) {
-		this.mMatchmakerConnector = connector;
-		
-		registerMessageHandlers();
+	public class MatchmakerConnectorListener implements ISocketConnectionServerConnectorListener {
+		@Override
+		public void onStarted(final ServerConnector<SocketConnection> pConnector) {
+			final ConnectionEstablishClientMessage connectionEstablishClientMessage = (ConnectionEstablishClientMessage)MatchmakerClient.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_CONNECTION_ESTABLISH);
+			connectionEstablishClientMessage.setProtocolVersion(PROTOCOL_VERSION);
+			try {
+				//AetherFlamesActivity.this.toast("CLIENT: Connected to server at " + WifiUtils.getWifiIPv4Address(AetherFlamesActivity.afa));
+				mMatchmakerConnector.sendClientMessage(connectionEstablishClientMessage);
+			} catch (IOException e) {
+				Debug.e(e);
+			}
+			MatchmakerClient.mMessagePool.recycleMessage(connectionEstablishClientMessage);
+		}
+
+		@Override
+		public void onTerminated(final ServerConnector<SocketConnection> pConnector) {
+			AetherFlamesActivity.afa.toast("Couldn't find matchmaker!");
+			//AetherFlamesActivity.this.finish();
+		}
 	}
-	
 }

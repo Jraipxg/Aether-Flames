@@ -1,5 +1,7 @@
 package com.jjaz.aetherflames;
 
+import java.net.UnknownHostException;
+
 import org.andengine.entity.scene.menu.MenuScene;
 import org.andengine.entity.scene.menu.animator.SlideMenuAnimator;
 import org.andengine.entity.scene.menu.item.IMenuItem;
@@ -7,7 +9,7 @@ import org.andengine.entity.scene.menu.item.TextMenuItem;
 import org.andengine.entity.scene.menu.item.decorator.ColorMenuItemDecorator;
 import org.andengine.entity.scene.menu.MenuScene.IOnMenuItemClickListener;
 import org.andengine.entity.sprite.Sprite;
-import org.andengine.ui.dialog.StringInputDialogBuilder;
+import org.andengine.extension.multiplayer.protocol.util.WifiUtils;
 import org.andengine.util.color.Color;
 
 import android.app.AlertDialog;
@@ -15,8 +17,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnShowListener;
 import android.opengl.GLES20;
-import android.os.Looper;
-import android.text.InputType;
 import android.view.Gravity;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -31,6 +31,8 @@ public class AetherFlamesMainMenu extends MenuScene implements IOnMenuItemClickL
 	
 	protected static Sprite title;
 	protected static MenuScene quickMatchMenu;
+	protected static MenuScene serverListMenu;
+	protected static MenuScene createServerMenu;
 
 	public AetherFlamesMainMenu()
 	{
@@ -86,12 +88,23 @@ public class AetherFlamesMainMenu extends MenuScene implements IOnMenuItemClickL
 	
 	private void handleServerList()
 	{
-		
+		//go to server list menu
+		if(serverListMenu == null)
+		{
+			serverListMenu = new AetherFlamesServerListMenu();
+		} 
+		serverListMenu.setPosition(10, AetherFlamesActivity.CAMERA_HEIGHT*0.2f);
+		this.setChildSceneModal(AetherFlamesMainMenu.serverListMenu);
 	}
 	
 	private void handleCreateServer()
 	{
-		
+		if(createServerMenu == null)
+		{
+			createServerMenu = new AetherFlamesCreateServerMenu();
+		} 
+		createServerMenu.setPosition(10, AetherFlamesActivity.CAMERA_HEIGHT*0.2f);
+		this.setChildSceneModal(AetherFlamesMainMenu.createServerMenu);
 	}
 	
 	public void showIPInput() {
@@ -115,7 +128,18 @@ public class AetherFlamesMainMenu extends MenuScene implements IOnMenuItemClickL
 					public void onClick(DialogInterface dialog, int whichButton) {
 						//setText(editText.getText().toString());
 						AetherFlamesActivity.afa.mServerIP = editText.getText().toString();
-						AetherFlamesActivity.afa.initClient();
+						GameServer gs = null;
+						try
+						{
+							gs = new GameServer(WifiUtils.getWifiIPv4Address(AetherFlamesActivity.afa), "???", 0);
+							gs.setGameActive(false);
+							gs.setNumPlayers(1);
+						}
+						catch (UnknownHostException e)
+						{
+							e.printStackTrace();
+						}
+						AetherFlamesActivity.afa.initClient(gs);
 					}
 				});
 
@@ -142,10 +166,6 @@ public class AetherFlamesMainMenu extends MenuScene implements IOnMenuItemClickL
 	
 	private void handleManualJoin()
 	{
-		//AetherFlamesActivity.afa.showDialog(AetherFlamesActivity.DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
-		//Looper.myLooper().prepare();
-		//AetherFlamesActivity.afa.showDialog(AetherFlamesActivity.DIALOG_CHOOSE_SERVER_OR_CLIENT_ID);
-		//AetherFlamesActivity.makeDialog();
 		showIPInput();
 	}
 	

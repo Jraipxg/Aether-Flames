@@ -2,7 +2,6 @@ package com.jjaz.aetherflames;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.andengine.engine.handler.IUpdateHandler;
