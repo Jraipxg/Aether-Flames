@@ -446,7 +446,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		super.onDestroy();
 	}
 	
-	private void startGame() {
+	protected void startGame() {
 		AetherFlamesActivity.mGameStarted = true;
 		AetherFlamesActivity.mPhysicsWorld.startGame();
 	}
@@ -601,7 +601,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	private void initWeaponSelection()
 	{		
 		AetherFlamesActivity.mWeaponSelection = new Sprite(AetherFlamesActivity.CAMERA_WIDTH - AetherFlamesActivity.WEAPON_SELECTION_BOX_SIZE, 0, AetherFlamesActivity.WEAPON_SELECTION_BOX_SIZE, AetherFlamesActivity.WEAPON_SELECTION_BOX_SIZE, AetherFlamesActivity.mWeaponSelectionTextureRegion, AetherFlamesActivity.mVertexBufferObjectManager);
-		AetherFlamesActivity.mWeaponSelection.setAlpha(0.5f);
+		AetherFlamesActivity.mWeaponSelection.setAlpha(0.25f);
 		AetherFlamesActivity.mScene.attachChild(AetherFlamesActivity.mWeaponSelection);
 		AetherFlamesActivity.mWeaponSelection.setVisible(false);
 	}

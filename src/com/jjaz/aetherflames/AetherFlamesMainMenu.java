@@ -23,6 +23,10 @@ import android.widget.EditText;
 
 public class AetherFlamesMainMenu extends MenuScene implements IOnMenuItemClickListener
 {
+	protected static final float MENU_ALPHA = 1.0f;
+	protected static final Color mNormalColor = new Color(0.75f, 0.75f, 0.75f);
+	protected static final Color mRolloverColor = new Color(0.94f, 0.64f, 0.24f);
+	
 	protected static final int MENU_QUICK_MATCH = 0;
 	protected static final int MENU_SERVER_LIST = 1;
 	protected static final int MENU_CREATE_SERVER = 2;
@@ -41,29 +45,32 @@ public class AetherFlamesMainMenu extends MenuScene implements IOnMenuItemClickL
 		title = new Sprite(0, 0, 960, 540, AetherFlamesActivity.mTitleTextureRegion, AetherFlamesActivity.mVertexBufferObjectManager);
 		AetherFlamesActivity.mScene.attachChild(title);
 		
-		this.setPosition(10, AetherFlamesActivity.CAMERA_HEIGHT*0.2f);
+		this.setPosition(10, AetherFlamesActivity.CAMERA_HEIGHT*0.16f);
 		
-		Color normalColor = new Color(1, 1, 1);
-		Color rolloverColor = new Color(0.94f, 0.64f, 0.24f);
 
-		final IMenuItem quickMatchMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_QUICK_MATCH, AetherFlamesActivity.mFont, "Quick Match", AetherFlamesActivity.mVertexBufferObjectManager), rolloverColor, normalColor);
+		final IMenuItem quickMatchMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_QUICK_MATCH, AetherFlamesActivity.mFont, "Quick Match", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
 		quickMatchMenuItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+		quickMatchMenuItem.setAlpha(MENU_ALPHA);
 		this.addMenuItem(quickMatchMenuItem);
 
-		final IMenuItem serverListMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_SERVER_LIST, AetherFlamesActivity.mFont, "Servers", AetherFlamesActivity.mVertexBufferObjectManager), rolloverColor, normalColor);
+		final IMenuItem serverListMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_SERVER_LIST, AetherFlamesActivity.mFont, "Servers", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
 		serverListMenuItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+		serverListMenuItem.setAlpha(MENU_ALPHA);
 		this.addMenuItem(serverListMenuItem);
 
-		final IMenuItem createServerMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_CREATE_SERVER, AetherFlamesActivity.mFont, "Create Server", AetherFlamesActivity.mVertexBufferObjectManager), rolloverColor, normalColor);
+		final IMenuItem createServerMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_CREATE_SERVER, AetherFlamesActivity.mFont, "Create Server", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
 		createServerMenuItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+		createServerMenuItem.setAlpha(MENU_ALPHA);
 		this.addMenuItem(createServerMenuItem);
 
-		final IMenuItem manualJoinMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_MANUAL_JOIN, AetherFlamesActivity.mFont, "Manual Game Join", AetherFlamesActivity.mVertexBufferObjectManager), rolloverColor, normalColor);
+		final IMenuItem manualJoinMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_MANUAL_JOIN, AetherFlamesActivity.mFont, "Manual Game Join", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
 		manualJoinMenuItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+		manualJoinMenuItem.setAlpha(MENU_ALPHA);
 		this.addMenuItem(manualJoinMenuItem);
 
-		final IMenuItem quitMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_QUIT, AetherFlamesActivity.mFont, "Quit", AetherFlamesActivity.mVertexBufferObjectManager), rolloverColor, normalColor);
+		final IMenuItem quitMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_QUIT, AetherFlamesActivity.mFont, "Quit", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
 		quitMenuItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+		quitMenuItem.setAlpha(MENU_ALPHA);
 		this.addMenuItem(quitMenuItem);
 		
 		SlideMenuAnimator animator = new SlideMenuAnimator();

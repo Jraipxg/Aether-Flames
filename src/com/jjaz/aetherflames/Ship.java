@@ -32,7 +32,7 @@ public class Ship implements AetherFlamesConstants
 	protected static final float LEFT = -1.0f;
 	protected static final float RIGHT = 1.0f;
 
-	private static final int SHIP_SIZE = 40;
+	private static final int SHIP_SIZE = 64;
 	private static final int STATUS_BAR_PADDING = 3;
 	private static final int REGEN_GRANULARITY = 5;
 
@@ -42,7 +42,7 @@ public class Ship implements AetherFlamesConstants
 	public int id;
 	private int hp;
 	private int ep;
-	private float thrust = 7.5f;
+	private float thrust = 25;//7.5f;
 	private boolean shieldsOn;
 	private float epRegenRate = 200.0f; //amount of EP regenerated in a second
 	
@@ -77,7 +77,7 @@ public class Ship implements AetherFlamesConstants
 	
 	public void updateStatusBars()
 	{
-		int yMod = ((body.getWorldCenter().y < 1.25)? (SHIP_SIZE + 12 + 2*STATUS_BAR_PADDING) : 0); //so that you can still see the bars when the ships are near the top of the screen
+		int yMod = ((body.getWorldCenter().y < 1.5)? (SHIP_SIZE + 12 + 2*STATUS_BAR_PADDING) : 0); //so that you can still see the bars when the ships are near the top of the screen
 		
 		Vector2 healthBarPosition = body.getWorldCenter();
 		healthBarPosition.x = (healthBarPosition.x*AetherFlamesActivity.WORLD_TO_CAMERA) - SHIP_SIZE/2;
