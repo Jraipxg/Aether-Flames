@@ -102,12 +102,18 @@ public class CollisionHandler implements ContactListener
 		{
 			if(tokensA[0].equals("ship") && tokensB[0].equals("health"))
 			{
-				AetherFlamesActivity.ships.get(Integer.parseInt(tokensA[1])).heal(HealthCrate.HEALING_AMOUNT);
+				int hID = Integer.parseInt(tokensB[1]);
+				int sID = Integer.parseInt(tokensA[1]);
+				AetherFlamesActivity.ships.get(sID).heal(HealthCrate.HEALING_AMOUNT);
+				AetherFlamesActivity.mPhysicsWorld.registerHealthPackHit(hID, sID);
 				destroyBody(bodyB);
 			}
 			if(tokensA[0].equals("health") && tokensB[0].equals("ship"))
 			{
-				AetherFlamesActivity.ships.get(Integer.parseInt(tokensB[1])).heal(HealthCrate.HEALING_AMOUNT);
+				int hID = Integer.parseInt(tokensA[1]);
+				int sID = Integer.parseInt(tokensB[1]);
+				AetherFlamesActivity.ships.get(sID).heal(HealthCrate.HEALING_AMOUNT);
+				AetherFlamesActivity.mPhysicsWorld.registerHealthPackHit(hID, sID);
 				destroyBody(bodyA);
 			}
 		}

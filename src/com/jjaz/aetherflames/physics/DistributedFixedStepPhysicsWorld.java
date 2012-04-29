@@ -2,8 +2,8 @@ package com.jjaz.aetherflames.physics;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.andengine.extension.multiplayer.protocol.adt.message.IMessage;
 import org.andengine.extension.multiplayer.protocol.adt.message.server.IServerMessage;
@@ -18,14 +18,18 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.jjaz.aetherflames.AetherFlamesConstants;
+import com.jjaz.aetherflames.HealthCrate;
 import com.jjaz.aetherflames.ProjectileWeapon;
 import com.jjaz.aetherflames.Ship;
 import com.jjaz.aetherflames.messages.client.CollisionClientMessage;
 import com.jjaz.aetherflames.messages.client.GameStateClientMessage;
+import com.jjaz.aetherflames.messages.client.HitHealthPackClientMessage;
 import com.jjaz.aetherflames.messages.client.NewBulletClientMessage;
 import com.jjaz.aetherflames.messages.server.CollisionServerMessage;
 import com.jjaz.aetherflames.messages.server.GameStateServerMessage;
+import com.jjaz.aetherflames.messages.server.HitHealthPackServerMessage;
 import com.jjaz.aetherflames.messages.server.NewBulletServerMessage;
+import com.jjaz.aetherflames.messages.server.NewHealthPackServerMessage;
 
 public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld implements AetherFlamesConstants {
 	
@@ -33,6 +37,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	private int mID;
 	private Map<Integer, Ship> mShips;
 	private Map<Integer, Body> mBullets;
+	private Map<Integer, Body> mHealthCrates;
 	private int mNextBulletID;
 	
 	// Frame rate variables
@@ -47,7 +52,8 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	
 	public DistributedFixedStepPhysicsWorld(final int pStepsPerSecond, final Vector2 pGravity, final boolean pAllowSleep, final int pVelocityIterations, final int pPositionIterations) {
 		super(pStepsPerSecond, pGravity, pAllowSleep, pVelocityIterations, pPositionIterations);
-		this.mBullets = new HashMap<Integer, Body>();
+		this.mBullets = new ConcurrentHashMap<Integer, Body>();
+		this.mHealthCrates = new ConcurrentHashMap<Integer, Body>();
 		this.mNextBulletID = this.mID * 100000;
 		this.mMaximumStepsPerUpdate = 10;
 		this.mTimeStep = 1.0f / pStepsPerSecond;
@@ -65,6 +71,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_GAME_STATE, GameStateClientMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET, NewBulletClientMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_COLLISION, CollisionClientMessage.class);
+		this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_HIT_HEALTH_PACK, HitHealthPackClientMessage.class);
 	}
 	
 
@@ -87,11 +94,25 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 					DistributedFixedStepPhysicsWorld.this.handleNewBulletMessage(newBulletMessage);
 				}
 			});
+			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_NEW_HEALTH_PACK, NewHealthPackServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+				@Override
+				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+					final NewHealthPackServerMessage newHealthPackMessage = (NewHealthPackServerMessage)pServerMessage;
+					DistributedFixedStepPhysicsWorld.this.handleNewHealthPackMessage(newHealthPackMessage);
+				}
+			});
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_COLLISION, CollisionServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
 					final CollisionServerMessage collisionMessage = (CollisionServerMessage)pServerMessage;
 					DistributedFixedStepPhysicsWorld.this.handleCollisionMessage(collisionMessage);
+				}
+			});
+			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_HIT_HEALTH_PACK, HitHealthPackServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+				@Override
+				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+					final HitHealthPackServerMessage hitHealthPackMessage = (HitHealthPackServerMessage)pServerMessage;
+					DistributedFixedStepPhysicsWorld.this.handleHitHealthPackMessage(hitHealthPackMessage);
 				}
 			});
 
@@ -112,12 +133,6 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 			message.setFrameNumber(this.mFrameNum);
 			message.setShipState(this.mShips.get(this.mID));
 
-			if(this.mShips.get(this.mID).getHealth() < 1000)
-			{
-				int x = 10;
-				x = x;
-			}
-			
 			// send the message
 			try {
 				this.mServerConnector.sendClientMessage(message);
@@ -220,12 +235,6 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		
 			// set nonphysical ship parameters
 			ship.setHealth(message.mHealth);
-			if(message.mHealth < 1000)
-			{
-				int x = 10;
-				x = x;
-			}
-			
 			ship.setEnergy(message.mEnergy);
 			if (message.mShieldActive) {
 				ship.activateShields();
@@ -262,6 +271,21 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 			createNewBullet(messageFrame, currentFrame, ship.getAvailableWeapons(), bulletID, type, angle, position, velocity);
 		}
 	}
+	
+	/**
+	 * Handle health pack generation messages form the server.
+	 * 
+	 * @param message The message to handle
+	 */
+	public void handleNewHealthPackMessage(NewHealthPackServerMessage message) {
+		int hID = message.mID;
+		float spawnX = message.mPosX;
+		float spawnY = message.mPosY;
+		
+		Body boxBody = HealthCrate.spawn(hID, spawnX, spawnY);
+		this.mHealthCrates.put(hID, boxBody);
+	}
+	
 	/**
 	 * Handle collision messages.
 	 * Deletes the bullet object from the game, assumes that the game state
@@ -280,6 +304,28 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 			if (bulletBody != null) {
 				bulletBody.setUserData("delete");
 				this.mBullets.remove(bulletID);
+			}
+		}
+	}
+	
+	/**
+	 * Handle hit health pack messages.
+	 * Deletes the health pack object from the game, assumes that the game state
+	 * update from the sender will reflect the health increase of the ship.
+	 * 
+	 * @param message The message to handle
+	 */
+	public void handleHitHealthPackMessage(HitHealthPackServerMessage message) {
+		int healthPackID = message.mHealthPackID;
+		int shipID = message.mShipID;
+		
+		if (shipID != this.mID) {
+			Body boxBody = this.mHealthCrates.get(healthPackID);
+			
+			// delete the bullet if it exists
+			if (boxBody != null) {
+				boxBody.setUserData("delete");
+				this.mHealthCrates.remove(healthPackID);
 			}
 		}
 	}
@@ -343,6 +389,30 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 
 		// remove entry for the given bullet
 		this.mBullets.remove(bulletID);
+		
+		// send message
+		try {
+			this.mServerConnector.sendClientMessage(message);
+		} catch (IOException e) {
+			Debug.e(e);
+		} finally {
+			this.mMessagePool.recycleMessage(message);
+		}
+	}
+	
+	/**
+	 * Registers that the given ship obtained a health pack to be sent to other users
+	 * 
+	 * @param healthPackID The health pack ID
+	 * @param shipID The ID of the sender (and affected ship)
+	 */
+	public void registerHealthPackHit(int healthPackID, int shipID) {
+		// create message
+		HitHealthPackClientMessage message = (HitHealthPackClientMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_HIT_HEALTH_PACK);
+		message.setHitHealthPack(healthPackID, shipID);
+
+		// remove entry for the given bullet
+		this.mHealthCrates.remove(healthPackID);
 		
 		// send message
 		try {

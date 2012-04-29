@@ -49,7 +49,6 @@ public class AetherFlamesServer extends
 		timer = new Timer();
 		generatorTask = new HealthPackGenerator(mMessagePool, this);
 		
-		//timer.schedule(generatorTask, 0, HealthCrate.DROP_RATE);
 		gameStarted = false;
 		this.requiredNumPlayers = maxPlayers;
 	}		
@@ -60,6 +59,7 @@ public class AetherFlamesServer extends
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE, ConnectionCloseServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_NEW_BULLET, NewBulletServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_COLLISION, CollisionServerMessage.class);
+		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_HIT_HEALTH_PACK, HitHealthPackServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_NEW_HEALTH_PACK, NewHealthPackServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_GAME_STATE, GameStateServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_GAME_START, GameStartServerMessage.class);
@@ -124,6 +124,20 @@ public class AetherFlamesServer extends
 			}
 		});
 		
+		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_HIT_HEALTH_PACK, HitHealthPackClientMessage.class, new IClientMessageHandler<SocketConnection>() {
+			@Override
+			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
+
+				synchronized (AetherFlamesServer.this) {
+					final HitHealthPackClientMessage hitHealthPackClientMessage = (HitHealthPackClientMessage)pClientMessage;
+					final HitHealthPackServerMessage hitHealthPackServerMessage = (HitHealthPackServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_HIT_HEALTH_PACK);
+					hitHealthPackServerMessage.setHitHealthPack(hitHealthPackClientMessage.mShipID, hitHealthPackClientMessage.mHealthPackID);
+					AetherFlamesServer.this.sendBroadcastServerMessage(hitHealthPackServerMessage); // broadcast
+					AetherFlamesServer.this.mMessagePool.recycleMessage(hitHealthPackServerMessage);
+				}
+			}
+		});
+		
 		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_CONNECTION_CLOSE, ConnectionCloseClientMessage.class, new IClientMessageHandler<SocketConnection>() {
 			@Override
 			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
@@ -153,6 +167,7 @@ public class AetherFlamesServer extends
 								final GameStartServerMessage gameStartServerMessage = (GameStartServerMessage) AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_GAME_START);
 								AetherFlamesServer.this.sendBroadcastServerMessage(gameStartServerMessage);
 								AetherFlamesServer.this.mMessagePool.recycleMessage(gameStartServerMessage);
+								timer.schedule(generatorTask, HealthCrate.DELAY, HealthCrate.DROP_RATE); // enable health crate generation
 								gameStarted = true; // game has begun, no more players!
 							}
 						} else { // rejected - game started or full
@@ -206,9 +221,10 @@ public class AetherFlamesServer extends
 				this.server.sendBroadcastServerMessage(message);
 			} catch (IOException e) {
 				Debug.e(e);
+			} finally {
+				this.messagePool.recycleMessage(message);
+				nextHealthPackID++;
 			}
-			this.messagePool.recycleMessage(message);
-			nextHealthPackID++;
 		}
 	}
 }

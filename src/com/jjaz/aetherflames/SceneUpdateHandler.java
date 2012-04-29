@@ -107,14 +107,14 @@ public class SceneUpdateHandler implements IUpdateHandler
 			AetherFlamesActivity.mGameEngine.stop();
 		}
 
-		long timeSinceLastHealthDrop = System.currentTimeMillis() - timeOfLastHealthDrop;
+		/*long timeSinceLastHealthDrop = System.currentTimeMillis() - timeOfLastHealthDrop;
 		if(timeSinceLastHealthDrop > HealthCrate.DROP_RATE)
 		{
 			float spawnX = (float)(Math.random()*AetherFlamesActivity.WORLD_WIDTH*0.8 + AetherFlamesActivity.WORLD_WIDTH*0.1f);
 			float spawnY = (float)(Math.random()*AetherFlamesActivity.WORLD_HEIGHT*0.8 + AetherFlamesActivity.WORLD_HEIGHT*0.1f);
 			HealthCrate.spawn(spawnX, spawnY);
 			timeOfLastHealthDrop = System.currentTimeMillis();
-		}
+		}*/
 		
 		long timeSinceLastExplosionCleanup = System.currentTimeMillis() - timeOfLastExplosionCleanup;
 		if(timeSinceLastExplosionCleanup > timeBetweenExplosionCleanup)

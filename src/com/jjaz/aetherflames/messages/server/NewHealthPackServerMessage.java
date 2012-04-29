@@ -24,29 +24,27 @@ public class NewHealthPackServerMessage extends ServerMessage implements AetherF
 	/**
 	 * C'tor
 	 * 
-	 * @param PosX The X position of the new health pack
-	 * @param PosY The Y position of the new health pack
+	 * @param id The id of the health pack
+	 * @param posX The X position of the new health pack
+	 * @param posY The Y position of the new health pack
 	 */
-	public NewHealthPackServerMessage(final int id, final float PosX, final float PosY) {
+	public NewHealthPackServerMessage(final int id, final float posX, final float posY) {
 		this.mID = id;
-		this.mPosX = PosX;
-		this.mPosY = PosY;
+		this.mPosX = posX;
+		this.mPosY = posY;
 	}
 	
 	/**
 	 * Setter.
 	 * 
-	 * @param sID Ship id.
-	 * @param bID Bullet id.
-	 * @param vecX Bullet vector x component.
-	 * @param vecY Bullet vector y component.
-	 * @param posX Bullet initial position x component.
-	 * @param posY Bullet initial position y component.
+	 * @param id Health pack id.
+	 * @param posX Health pack initial position x component.
+	 * @param posY Health pack initial position y component.
 	 */	
-	public void setNewHealthPack (final int id, final float PosX, final float PosY) {
+	public void setNewHealthPack (final int id, final float posX, final float posY) {
 		this.mID = id;
-		this.mPosX = PosX;
-		this.mPosY = PosY;
+		this.mPosX = posX;
+		this.mPosY = posY;
 	}
 	
 	@Override
