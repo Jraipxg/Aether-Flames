@@ -124,7 +124,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	/**
 	 * Reports the game state to the server
 	 */
-	private void reportState() {		
+	public void reportState() {		
 		Ship ship = this.mShips.get(this.mID);
 		
 		// set the message fields and send the message if the ship is still alive
