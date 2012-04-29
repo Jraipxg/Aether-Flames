@@ -744,7 +744,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		@Override
 		public void onTerminated(final ServerConnector<SocketConnection> pConnector) {
 			AetherFlamesActivity.this.toast("CLIENT: Disconnected from Server...");
-			AetherFlamesActivity.this.finish();
+			//AetherFlamesActivity.this.finish();
 		}
 	}
 

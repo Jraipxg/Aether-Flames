@@ -71,6 +71,7 @@ public class MatchmakerClient implements AetherFlamesConstants {
 		MatchmakerClient.mMessagePool.registerMessage(FLAG_MESSAGE_PHONE_GET_FIRST_SERVER, GetFirstServerPhoneMessage.class);
 		MatchmakerClient.mMessagePool.registerMessage(FLAG_MESSAGE_PHONE_GET_SERVER_LIST, GetServerListPhoneMessage.class);
 		MatchmakerClient.mMessagePool.registerMessage(FLAG_MESSAGE_PHONE_START_SERVER, StartServerPhoneMessage.class);
+		MatchmakerClient.mMessagePool.registerMessage(FLAG_MESSAGE_PHONE_GAME_START, GameStartPhoneMessage.class);
 	}
 	
 
@@ -86,16 +87,25 @@ public class MatchmakerClient implements AetherFlamesConstants {
 					DistributedFixedStepPhysicsWorld.this.handleGameStateMessage(gameStateMessage);
 				}
 			});*/
+			MatchmakerClient.mMatchmakerConnector.registerServerMessage(FLAG_MESSAGE_MATCHMAKER_CONNECTION_REJECTED_PROTOCOL_MISMATCH, ConnectionRejectedProtocolMismatchMatchmakerMessage.class, new IServerMessageHandler<SocketConnection>() {
+			@Override
+			public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+				final ConnectionRejectedProtocolMismatchMatchmakerMessage connectionRejectedProtocalMismatch = (ConnectionRejectedProtocolMismatchMatchmakerMessage)pServerMessage;
+				// do something about this later
+			}
+			});
 			MatchmakerClient.mMatchmakerConnector.registerServerMessage(FLAG_MESSAGE_MATCHMAKER_CONNECTION_ESTABLISH, ConnectionEstablishMatchmakerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
 					MatchmakerClient.matchmakerFound = true; // connection established
+					System.out.println("MASFDJAKSDJASDKJASDKJ");
 				}
 			});
 			MatchmakerClient.mMatchmakerConnector.registerServerMessage(FLAG_MESSAGE_MATCHMAKER_FREE_SERVER, FreeServerMatchmakerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
 					final FreeServerMatchmakerMessage freeServerMessage = (FreeServerMatchmakerMessage)pServerMessage;
+					System.out.println("Got free server message.");
 					MatchmakerClient.handleFreeServerMessage(freeServerMessage);
 				}
 			});
@@ -106,6 +116,8 @@ public class MatchmakerClient implements AetherFlamesConstants {
 					MatchmakerClient.handleServerListMessage(serverListMessage);
 				}
 			});
+			
+			MatchmakerClient.mMatchmakerConnector.getConnection().start();
 
 		} catch (final Throwable t) {
 			Debug.e(t);
@@ -153,7 +165,7 @@ public class MatchmakerClient implements AetherFlamesConstants {
 			talkingToMatchmakerLock.unlock();
 		}
 	}
-	
+
 	/**
 	 * Should return a single server, however that is structured.
 	 */
@@ -164,6 +176,7 @@ public class MatchmakerClient implements AetherFlamesConstants {
 		// send the message
 		try {
 			MatchmakerClient.mMatchmakerConnector.sendClientMessage(message);
+			System.out.println("Sent out a single server request.");
 			MatchmakerClient.mMessagePool.recycleMessage(message);
 		} catch (IOException e) {
 			Debug.e(e);
@@ -186,7 +199,6 @@ public class MatchmakerClient implements AetherFlamesConstants {
 		{
 			//talkingToMatchmakerLock.unlock();
 		}
-		
 		return server;
 	}
 	
@@ -284,15 +296,15 @@ public class MatchmakerClient implements AetherFlamesConstants {
 	public class MatchmakerConnectorListener implements ISocketConnectionServerConnectorListener {
 		@Override
 		public void onStarted(final ServerConnector<SocketConnection> pConnector) {
-			final ConnectionEstablishClientMessage connectionEstablishClientMessage = (ConnectionEstablishClientMessage)MatchmakerClient.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_CONNECTION_ESTABLISH);
-			connectionEstablishClientMessage.setProtocolVersion(PROTOCOL_VERSION);
+			final ConnectionEstablishPhoneMessage connectionEstablishPhoneMessage = (ConnectionEstablishPhoneMessage)MatchmakerClient.mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_CONNECTION_ESTABLISH);
+			connectionEstablishPhoneMessage.setProtocolVersion(PROTOCOL_VERSION);
 			try {
-				//AetherFlamesActivity.this.toast("CLIENT: Connected to server at " + WifiUtils.getWifiIPv4Address(AetherFlamesActivity.afa));
-				mMatchmakerConnector.sendClientMessage(connectionEstablishClientMessage);
+				System.out.println("OnStarted called.");
+				mMatchmakerConnector.sendClientMessage(connectionEstablishPhoneMessage);
 			} catch (IOException e) {
 				Debug.e(e);
 			}
-			MatchmakerClient.mMessagePool.recycleMessage(connectionEstablishClientMessage);
+			MatchmakerClient.mMessagePool.recycleMessage(connectionEstablishPhoneMessage);
 		}
 
 		@Override

@@ -1,10 +1,9 @@
-package com.jjaz.aetherflames.messages.phone;
-
+package com.jjaz.aetherflames.messages.matchmaker;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.andengine.extension.multiplayer.protocol.adt.message.client.ClientMessage;
+import org.andengine.extension.multiplayer.protocol.adt.message.server.ServerMessage;
 
 import com.jjaz.aetherflames.AetherFlamesConstants;
 
@@ -13,9 +12,9 @@ import com.jjaz.aetherflames.AetherFlamesConstants;
  * (c) 2011 Zynga Inc.
  * 
  * @author Nicolas Gramlich
- * @since 12:00:31 - 21.05.2011
+ * @since 12:23:15 - 21.05.2011
  */
-public class ConnectionEstablishPhoneMessage extends ClientMessage implements AetherFlamesConstants {
+public class ConnectionRejectedProtocolMismatchMatchmakerMessage extends ServerMessage implements AetherFlamesConstants {
 	// ===========================================================
 	// Constants
 	// ===========================================================
@@ -31,11 +30,11 @@ public class ConnectionEstablishPhoneMessage extends ClientMessage implements Ae
 	// ===========================================================
 
 	@Deprecated
-	public ConnectionEstablishPhoneMessage() {
+	public ConnectionRejectedProtocolMismatchMatchmakerMessage() {
 
 	}
 
-	public ConnectionEstablishPhoneMessage(final short pProtocolVersion) {
+	public ConnectionRejectedProtocolMismatchMatchmakerMessage(final short pProtocolVersion) {
 		this.mProtocolVersion = pProtocolVersion;
 	}
 
@@ -46,7 +45,7 @@ public class ConnectionEstablishPhoneMessage extends ClientMessage implements Ae
 	public short getProtocolVersion() {
 		return this.mProtocolVersion;
 	}
-	
+
 	public void setProtocolVersion(final short pProtocolVersion) {
 		this.mProtocolVersion = pProtocolVersion;
 	}
@@ -57,7 +56,7 @@ public class ConnectionEstablishPhoneMessage extends ClientMessage implements Ae
 
 	@Override
 	public short getFlag() {
-		return FLAG_MESSAGE_PHONE_CONNECTION_ESTABLISH;
+		return FLAG_MESSAGE_MATCHMAKER_CONNECTION_REJECTED_PROTOCOL_MISMATCH;
 	}
 
 	@Override
