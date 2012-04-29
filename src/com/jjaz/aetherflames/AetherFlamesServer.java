@@ -2,8 +2,9 @@ package com.jjaz.aetherflames;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.andengine.engine.handler.IUpdateHandler;
 import com.jjaz.aetherflames.AetherFlamesConstants;
@@ -31,6 +32,8 @@ public class AetherFlamesServer extends
 	boolean gameStarted;
 	LinkedList<ServerMessage> messages;
 	HashSet<ClientConnector<SocketConnection>> connectedPlayers;
+	Timer timer;
+	HealthPackGenerator generatorTask;
 	int requiredNumPlayers;
 	
 	// ===========================================================
@@ -43,7 +46,10 @@ public class AetherFlamesServer extends
 		this.initMessagePool();
 		messages = new LinkedList<ServerMessage>();
 		connectedPlayers = new HashSet<ClientConnector<SocketConnection>>();
+		timer = new Timer();
+		generatorTask = new HealthPackGenerator(mMessagePool, this);
 		
+		//timer.schedule(generatorTask, 0, HealthCrate.DROP_RATE);
 		gameStarted = false;
 		this.requiredNumPlayers = maxPlayers;
 	}		
@@ -54,6 +60,7 @@ public class AetherFlamesServer extends
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE, ConnectionCloseServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_NEW_BULLET, NewBulletServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_COLLISION, CollisionServerMessage.class);
+		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_NEW_HEALTH_PACK, NewHealthPackServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_GAME_STATE, GameStateServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_GAME_START, GameStartServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_GAME_END, GameEndServerMessage.class);
@@ -174,4 +181,34 @@ public class AetherFlamesServer extends
 		return clientConnector;
 	}
 
+	private class HealthPackGenerator extends TimerTask {
+		
+		public MessagePool<IMessage> messagePool;
+		public AetherFlamesServer server;
+		public int nextHealthPackID;
+		
+		public HealthPackGenerator(MessagePool<IMessage> p, AetherFlamesServer s) {
+			messagePool = p;
+			server = s;
+			nextHealthPackID = 0;
+		}
+		
+		@Override
+		public void run() {
+			int id = nextHealthPackID;
+			float spawnX = (float)(Math.random()*AetherFlamesActivity.WORLD_WIDTH*0.8 + AetherFlamesActivity.WORLD_WIDTH*0.1f);
+			float spawnY = (float)(Math.random()*AetherFlamesActivity.WORLD_HEIGHT*0.8 + AetherFlamesActivity.WORLD_HEIGHT*0.1f);
+			
+			NewHealthPackServerMessage message = (NewHealthPackServerMessage)this.messagePool.obtainMessage(FLAG_MESSAGE_SERVER_NEW_HEALTH_PACK);
+			message.setNewHealthPack(id, spawnX, spawnY);
+			
+			try {
+				this.server.sendBroadcastServerMessage(message);
+			} catch (IOException e) {
+				Debug.e(e);
+			}
+			this.messagePool.recycleMessage(message);
+			nextHealthPackID++;
+		}
+	}
 }
