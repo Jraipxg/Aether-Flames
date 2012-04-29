@@ -3,10 +3,14 @@ package com.jjaz.aetherflames.messages.matchmaker;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import org.andengine.extension.multiplayer.protocol.adt.message.server.ServerMessage;
+import org.andengine.util.debug.Debug;
 
 import com.jjaz.aetherflames.AetherFlamesConstants;
+import com.jjaz.aetherflames.GameServer;
 
 public class FreeServerMatchmakerMessage extends ServerMessage implements AetherFlamesConstants {
 	// ===========================================================
@@ -17,27 +21,27 @@ public class FreeServerMatchmakerMessage extends ServerMessage implements Aether
 	// Fields
 	// ===========================================================
 
-	private String mServerName;
-
+	public GameServer mServer;
+	
 	// ===========================================================
 	// Constructors
 	// ===========================================================
 
-	@Deprecated
 	public FreeServerMatchmakerMessage() {
-
+		// intentionally empty
 	}
-
-	public FreeServerMatchmakerMessage(final String pServerName) {
-		this.mServerName = pServerName;
+	
+	public FreeServerMatchmakerMessage(final GameServer pServer)
+	{
+		mServer = pServer;
 	}
 
 	// ===========================================================
 	// Getter & Setter
 	// ===========================================================
-
-	public String getProtocolVersion() {
-		return this.mServerName;
+	
+	public void setServer(final GameServer pServer) {
+		mServer = pServer;
 	}
 
 	// ===========================================================
@@ -51,12 +55,18 @@ public class FreeServerMatchmakerMessage extends ServerMessage implements Aether
 
 	@Override
 	protected void onReadTransmissionData(final DataInputStream pDataInputStream) throws IOException {
-		this.mServerName = pDataInputStream.readLine();
+		ObjectInputStream reader = new ObjectInputStream(pDataInputStream);
+		try {
+			this.mServer = (GameServer) reader.readObject();
+		} catch (ClassNotFoundException e) {
+			Debug.e(e);
+		}
 	}
 
 	@Override
 	protected void onWriteTransmissionData(final DataOutputStream pDataOutputStream) throws IOException {
-		pDataOutputStream.writeChars(this.mServerName);
+		ObjectOutputStream writer = new ObjectOutputStream(pDataOutputStream);
+		writer.writeObject(this.mServer);
 	}
 
 	// ===========================================================

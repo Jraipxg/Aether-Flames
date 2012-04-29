@@ -157,7 +157,8 @@ public class MatchmakerClient implements AetherFlamesConstants {
 	 */
 	public void setPlayerCount(short numPlayers) {
 		CurrentPlayerCountPhoneMessage message = (CurrentPlayerCountPhoneMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_CURRENT_PLAYER_COUNT);
-		message.setPlayerCount(numPlayers);
+		
+		// TODO: CREATE A GAMESERVER OBJECT AND SET THE NUMBER OF PLAYERS IN IT AND ADD IT TO THE MESSAGE
 		
 		// send the message
 		try {
