@@ -100,7 +100,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 			});
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_NEW_HEALTH_PACK, NewHealthPackServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
-				public synchronized void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
 					synchronized (DistributedFixedStepPhysicsWorld.this) {
 						final NewHealthPackServerMessage newHealthPackMessage = (NewHealthPackServerMessage)pServerMessage;
 						DistributedFixedStepPhysicsWorld.this.handleNewHealthPackMessage(newHealthPackMessage);
@@ -109,7 +109,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 			});
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_COLLISION, CollisionServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
-				public synchronized void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
 					synchronized (DistributedFixedStepPhysicsWorld.this) {
 						final CollisionServerMessage collisionMessage = (CollisionServerMessage)pServerMessage;
 						DistributedFixedStepPhysicsWorld.this.handleCollisionMessage(collisionMessage);
@@ -118,7 +118,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 			});
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_HIT_HEALTH_PACK, HitHealthPackServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
-				public synchronized void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
 					synchronized (DistributedFixedStepPhysicsWorld.this) {
 						final HitHealthPackServerMessage hitHealthPackMessage = (HitHealthPackServerMessage)pServerMessage;
 						DistributedFixedStepPhysicsWorld.this.handleHitHealthPackMessage(hitHealthPackMessage);
@@ -141,7 +141,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		if (ship != null && this.mServerConnector != null) {
 			GameStateClientMessage message = (GameStateClientMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_GAME_STATE);
 			message.setFrameNumber(this.mFrameNum);
-			message.setShipState(this.mShips.get(this.mID));
+			message.setShipState(ship);
 
 			// send the message
 			try {

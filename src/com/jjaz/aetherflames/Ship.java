@@ -125,6 +125,7 @@ public class Ship implements AetherFlamesConstants
 		AetherFlamesActivity.mScene.detachChild(energyBar);
 		AetherFlamesActivity.mScene.detachChild(energyBarBackground);
 		AetherFlamesActivity.ships.remove(id);
+		AetherFlamesActivity.mPhysicsWorld.reportState();
 		AetherFlamesActivity.mPhysicsWorld.removeShip(id);
 		
 		if(explode)
