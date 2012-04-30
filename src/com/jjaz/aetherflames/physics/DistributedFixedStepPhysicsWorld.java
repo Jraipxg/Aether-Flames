@@ -83,36 +83,46 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_GAME_STATE, GameStateServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
-					final GameStateServerMessage gameStateMessage = (GameStateServerMessage)pServerMessage;
-					DistributedFixedStepPhysicsWorld.this.handleGameStateMessage(gameStateMessage);
+					synchronized (DistributedFixedStepPhysicsWorld.this) {
+						final GameStateServerMessage gameStateMessage = (GameStateServerMessage)pServerMessage;
+						DistributedFixedStepPhysicsWorld.this.handleGameStateMessage(gameStateMessage);
+					}
 				}
 			});
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_NEW_BULLET, NewBulletServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
-					final NewBulletServerMessage newBulletMessage = (NewBulletServerMessage)pServerMessage;
-					DistributedFixedStepPhysicsWorld.this.handleNewBulletMessage(newBulletMessage);
+					synchronized (DistributedFixedStepPhysicsWorld.this) {
+						final NewBulletServerMessage newBulletMessage = (NewBulletServerMessage)pServerMessage;
+						DistributedFixedStepPhysicsWorld.this.handleNewBulletMessage(newBulletMessage);
+					}
 				}
 			});
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_NEW_HEALTH_PACK, NewHealthPackServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
-				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
-					final NewHealthPackServerMessage newHealthPackMessage = (NewHealthPackServerMessage)pServerMessage;
-					DistributedFixedStepPhysicsWorld.this.handleNewHealthPackMessage(newHealthPackMessage);
+				public synchronized void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+					synchronized (DistributedFixedStepPhysicsWorld.this) {
+						final NewHealthPackServerMessage newHealthPackMessage = (NewHealthPackServerMessage)pServerMessage;
+						DistributedFixedStepPhysicsWorld.this.handleNewHealthPackMessage(newHealthPackMessage);
+					}
 				}
 			});
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_COLLISION, CollisionServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
-				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
-					final CollisionServerMessage collisionMessage = (CollisionServerMessage)pServerMessage;
-					DistributedFixedStepPhysicsWorld.this.handleCollisionMessage(collisionMessage);
+				public synchronized void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+					synchronized (DistributedFixedStepPhysicsWorld.this) {
+						final CollisionServerMessage collisionMessage = (CollisionServerMessage)pServerMessage;
+						DistributedFixedStepPhysicsWorld.this.handleCollisionMessage(collisionMessage);
+					}
 				}
 			});
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_HIT_HEALTH_PACK, HitHealthPackServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
-				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
-					final HitHealthPackServerMessage hitHealthPackMessage = (HitHealthPackServerMessage)pServerMessage;
-					DistributedFixedStepPhysicsWorld.this.handleHitHealthPackMessage(hitHealthPackMessage);
+				public synchronized void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+					synchronized (DistributedFixedStepPhysicsWorld.this) {
+						final HitHealthPackServerMessage hitHealthPackMessage = (HitHealthPackServerMessage)pServerMessage;
+						DistributedFixedStepPhysicsWorld.this.handleHitHealthPackMessage(hitHealthPackMessage);
+					}
 				}
 			});
 
@@ -422,30 +432,32 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	
 	@Override
 	public void onUpdate(final float pSecondsElapsed) {
-		this.mRunnableHandler.onUpdate(pSecondsElapsed);
-		this.mSecondsElapsedAccumulator += pSecondsElapsed;
-
-		final int velocityIterations = this.mVelocityIterations;
-		final int positionIterations = this.mPositionIterations;
-
-		final World world = this.mWorld;
-		final float stepLength = this.mTimeStep;
-		
-		int stepsAllowed = this.mMaximumStepsPerUpdate;
-		
-		while(this.mSecondsElapsedAccumulator >= stepLength && stepsAllowed > 0) {
-			world.step(stepLength, velocityIterations, positionIterations);
-			this.mSecondsElapsedAccumulator -= stepLength;
-			stepsAllowed--;
+		synchronized (DistributedFixedStepPhysicsWorld.this) {
+			this.mRunnableHandler.onUpdate(pSecondsElapsed);
+			this.mSecondsElapsedAccumulator += pSecondsElapsed;
+	
+			final int velocityIterations = this.mVelocityIterations;
+			final int positionIterations = this.mPositionIterations;
+	
+			final World world = this.mWorld;
+			final float stepLength = this.mTimeStep;
 			
-			if ((this.mFrameNum % FRAMES_PER_UPDATE) == 0) {
-				this.reportState();
+			int stepsAllowed = this.mMaximumStepsPerUpdate;
+			
+			while(this.mSecondsElapsedAccumulator >= stepLength && stepsAllowed > 0) {
+				world.step(stepLength, velocityIterations, positionIterations);
+				this.mSecondsElapsedAccumulator -= stepLength;
+				stepsAllowed--;
+				
+				if ((this.mFrameNum % FRAMES_PER_UPDATE) == 0) {
+					this.reportState();
+				}
+				
+				this.mFrameNum++;
 			}
 			
-			this.mFrameNum++;
+			this.mPhysicsConnectorManager.onUpdate(pSecondsElapsed);
 		}
-		
-		this.mPhysicsConnectorManager.onUpdate(pSecondsElapsed);
 	}
 	
 	/**

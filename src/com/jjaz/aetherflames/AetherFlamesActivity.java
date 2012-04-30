@@ -462,7 +462,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		}
 
 		super.onPause();
-		android.os.Process.killProcess(android.os.Process.myPid());
+		//android.os.Process.killProcess(android.os.Process.myPid());
 	}
 	
 	protected void startGame() {
