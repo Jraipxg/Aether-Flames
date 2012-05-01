@@ -164,11 +164,18 @@ public class AetherFlamesServer extends
 							AetherFlamesServer.this.mMessagePool.recycleMessage(connectionEstablishedServerMessage);
 							// if we reached the player count, start the game already!
 							if (connectedPlayers.size() == requiredNumPlayers) {
+								// alert the matchmaker that we started
+								MatchmakerClient.sendGameStartPhoneMessage(connectedPlayers.size());
+								// inform the players that we should start
 								final GameStartServerMessage gameStartServerMessage = (GameStartServerMessage) AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_GAME_START);
 								AetherFlamesServer.this.sendBroadcastServerMessage(gameStartServerMessage);
 								AetherFlamesServer.this.mMessagePool.recycleMessage(gameStartServerMessage);
 								timer.schedule(generatorTask, HealthCrate.DELAY, HealthCrate.DROP_RATE); // enable health crate generation
 								gameStarted = true; // game has begun, no more players!
+								
+							} else {
+								// alert the matchmaker of our new player count
+								MatchmakerClient.sendCurrentPlayerCountPhoneMessage(connectedPlayers.size());
 							}
 						} else { // rejected - game started or full
 							final ConnectionRejectedGameStartedServerMessage connectionRejectedGameStartedServerMessage = (ConnectionRejectedGameStartedServerMessage) AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_CONNECTION_REJECTED_GAME_STARTED);

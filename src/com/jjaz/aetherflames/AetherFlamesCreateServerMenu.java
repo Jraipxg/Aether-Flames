@@ -93,7 +93,6 @@ public class AetherFlamesCreateServerMenu extends MenuScene implements IOnMenuIt
 		try
 		{
 			gs = new GameServer(WifiUtils.getWifiIPv4Address(AetherFlamesActivity.afa), "???", numPlayersDesired);
-			gs.setGameActive(false);
 			gs.setNumPlayers(1);
 		}
 		catch (UnknownHostException e)

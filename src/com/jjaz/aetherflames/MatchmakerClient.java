@@ -98,7 +98,6 @@ public class MatchmakerClient implements AetherFlamesConstants {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
 					MatchmakerClient.matchmakerFound = true; // connection established
-					System.out.println("MASFDJAKSDJASDKJASDKJ");
 				}
 			});
 			MatchmakerClient.mMatchmakerConnector.registerServerMessage(FLAG_MESSAGE_MATCHMAKER_FREE_SERVER, FreeServerMatchmakerMessage.class, new IServerMessageHandler<SocketConnection>() {
@@ -246,6 +245,7 @@ public class MatchmakerClient implements AetherFlamesConstants {
 		StartServerPhoneMessage message = (StartServerPhoneMessage)MatchmakerClient.mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_START_SERVER);
 		
 		message.mServer = gs;
+		MatchmakerClient.server = gs;
 		
 		// send the message
 		try {
@@ -255,43 +255,6 @@ public class MatchmakerClient implements AetherFlamesConstants {
 			Debug.e(e);
 		}
 	}	
-	
-	/**
-	 * Inform the matchmaker of the number of players currently on this server.
-	 * Should be called every time a player connects or disconnects if the game
-	 * has not yet started.
-	 * 
-	 * @param numPlayers Current number of players on the server.
-	 */
-	public static void setPlayerCount(short numPlayers) {
-		CurrentPlayerCountPhoneMessage message = (CurrentPlayerCountPhoneMessage)MatchmakerClient.mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_CURRENT_PLAYER_COUNT);
-		
-		// TODO: CREATE A GAMESERVER OBJECT AND SET THE NUMBER OF PLAYERS IN IT AND ADD IT TO THE MESSAGE
-		
-		// send the message
-		try {
-			MatchmakerClient.mMatchmakerConnector.sendClientMessage(message);
-			MatchmakerClient.mMessagePool.recycleMessage(message);
-		} catch (IOException e) {
-			Debug.e(e);
-		}
-	}	
-	
-	/**
-	 * Close the connection on starting a game.
-	 */
-	public static void startGame() {
-		ConnectionClosePhoneMessage message = (ConnectionClosePhoneMessage)mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_CONNECTION_CLOSE);
-		
-		// send the message
-		try {
-			mMatchmakerConnector.sendClientMessage(message);
-			mMessagePool.recycleMessage(message);
-			mMatchmakerConnector.terminate(); // don't need this forever
-		} catch (IOException e) {
-			Debug.e(e);
-		}
-	}
 	
 	public class MatchmakerConnectorListener implements ISocketConnectionServerConnectorListener {
 		@Override
@@ -312,5 +275,45 @@ public class MatchmakerClient implements AetherFlamesConstants {
 			AetherFlamesActivity.afa.toast("Couldn't find matchmaker!");
 			//AetherFlamesActivity.this.finish();
 		}
+	}
+
+	public static void sendGameStartPhoneMessage(int players) {
+		GameStartPhoneMessage message = (GameStartPhoneMessage) MatchmakerClient.mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_GAME_START);
+		MatchmakerClient.server.setNumPlayers(players); // update the number of players
+		message.setServer(MatchmakerClient.server);
+		try {
+			mMatchmakerConnector.sendClientMessage(message);
+		} catch (IOException e) {
+			Debug.e(e);
+		} finally {
+			MatchmakerClient.mMessagePool.recycleMessage(message);
+		}		
+	}
+
+	public static void sendCurrentPlayerCountPhoneMessage(int players) {
+		if (players != 1) { // don't send this message if we just started the server
+			CurrentPlayerCountPhoneMessage message = (CurrentPlayerCountPhoneMessage) MatchmakerClient.mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_CURRENT_PLAYER_COUNT);
+			MatchmakerClient.server.setNumPlayers(players); // update the number of players
+			message.setServer(MatchmakerClient.server);
+			try {
+				mMatchmakerConnector.sendClientMessage(message);
+			} catch (IOException e) {
+				Debug.e(e);
+			} finally {
+				MatchmakerClient.mMessagePool.recycleMessage(message);
+			}
+		}
+	}
+
+	public static void closeConnection() {
+		ConnectionClosePhoneMessage message = (ConnectionClosePhoneMessage) MatchmakerClient.mMessagePool.obtainMessage(FLAG_MESSAGE_PHONE_CONNECTION_CLOSE);
+		try {
+			mMatchmakerConnector.sendClientMessage(message);
+		} catch (IOException e) {
+			Debug.e(e);
+		} finally {
+			MatchmakerClient.mMessagePool.recycleMessage(message);
+		}
+		mMatchmakerConnector.terminate(); // kill the connection
 	}
 }

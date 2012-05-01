@@ -526,6 +526,9 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 						colors.remove(i);
 					}
 					
+					// detach from matchmaker
+					MatchmakerClient.closeConnection();
+					
 					AetherFlamesActivity.createGame(colors, AetherFlamesActivity.myShipColor);
 					AetherFlamesActivity.this.startGame();
 				}

@@ -240,15 +240,19 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 			Vector2 position = new Vector2(message.mShipPosX, message.mShipPosY);
 			Vector2 velocity = new Vector2(message.mShipVelocityX, message.mShipVelocityY);
 			updateShipBody(ship, messageFrame, currentFrame, angle, angularVelocity, position, velocity);
-		
-			// set nonphysical ship parameters
-			ship.setHealth(message.mHealth);
-			ship.setEnergy(message.mEnergy);
+			
 			if (message.mShieldActive) {
 				ship.activateShields();
 			} else {
 				ship.deactivateShields();
 			}
+			
+			// set nonphysical ship parameters
+			int damage = ship.getHealth() - message.mHealth;
+			ship.damage(damage);
+			
+			ship.setEnergy(message.mEnergy);
+
 		}
 	}
 	

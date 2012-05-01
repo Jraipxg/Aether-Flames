@@ -139,7 +139,6 @@ public class AetherFlamesMainMenu extends MenuScene implements IOnMenuItemClickL
 						try
 						{
 							gs = new GameServer(WifiUtils.getWifiIPv4Address(AetherFlamesActivity.afa), "???", 0);
-							gs.setGameActive(false);
 							gs.setNumPlayers(1);
 						}
 						catch (UnknownHostException e)

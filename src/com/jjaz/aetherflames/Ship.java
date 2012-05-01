@@ -119,13 +119,13 @@ public class Ship implements AetherFlamesConstants
 	
 	void destroyShip(boolean explode)
 	{
+		AetherFlamesActivity.mPhysicsWorld.reportState();
 		body.setUserData("delete");
 		AetherFlamesActivity.mScene.detachChild(healthBar);
 		AetherFlamesActivity.mScene.detachChild(healthBarBackground);
 		AetherFlamesActivity.mScene.detachChild(energyBar);
 		AetherFlamesActivity.mScene.detachChild(energyBarBackground);
 		AetherFlamesActivity.ships.remove(id);
-		AetherFlamesActivity.mPhysicsWorld.reportState();
 		AetherFlamesActivity.mPhysicsWorld.removeShip(id);
 		
 		if(explode)
