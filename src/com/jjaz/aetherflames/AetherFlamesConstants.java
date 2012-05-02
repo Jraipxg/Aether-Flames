@@ -17,6 +17,7 @@ public interface AetherFlamesConstants {
 	public static final int FRAMES_PER_SECOND = 30;
 	public static final int MAX_GAME_STATE_DELAY = 10;
 	public static final int FIELD_EMPTY = -1;
+	public static final int NUM_PREDICTION_FRAMES = 5;
 	
 	/* Server --> Client */
 	public static final short FLAG_MESSAGE_SERVER_NEW_BULLET = 1;

@@ -166,18 +166,26 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	 * @param velocity New velocity
 	 */
 	private void updateShipBody(Ship ship, int messageFrame, int currentFrame, float angle, float angularVelocity, Vector2 position, Vector2 velocity) {
-		int frameDiff = currentFrame - messageFrame;
+		int frameDiff = currentFrame - messageFrame + NUM_PREDICTION_FRAMES;
 		float framePeriod = 1.0f / FRAMES_PER_SECOND;
 		float dt = frameDiff * framePeriod;
 		
-		// estimate the current position and angle
-		float curAngle = angle + angularVelocity * dt;
-		Vector2 curPos = position.add(velocity.mul(dt));
+		// estimate the current angle
+		float newAngle = angle + angularVelocity * dt;
 		
-		ship.setAngle(curAngle);
+		// estimate the position 'n' frames ahead
+		Vector2 curPos = ship.getPosition();
+		Vector2 predictedPos = position.add(velocity.mul(dt));
+		
+		// calculate the velocity to take the ship to the predicted position in 'n' frames
+		Vector2 posDiff = predictedPos.sub(curPos);
+		dt = NUM_PREDICTION_FRAMES * framePeriod;
+		Vector2 newVelocity = posDiff.mul(1.0f / dt);
+		
+		ship.setAngle(newAngle);
 		//ship.setAngularVelocity(angularVelocity);
 		ship.setPosition(curPos);
-		ship.setVelocity(velocity);
+		ship.setVelocity(newVelocity);
 		
 	}
 	
