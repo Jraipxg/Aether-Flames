@@ -198,7 +198,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		
 		// estimate the position 'n' frames ahead
 		Vector2 curPos = ship.getPosition();
-		Vector2 predictedPos = position.add(velocity.mul(dt));
+		Vector2 predictedPos = position.add(velocity.cpy().mul(dt));
 		
 		if (predictedPos.x < 0) predictedPos.x = 0;
 		if (predictedPos.x >= AetherFlamesActivity.CAMERA_WIDTH) predictedPos.x = AetherFlamesActivity.CAMERA_WIDTH-1;
@@ -243,7 +243,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		// fire the weapon if it exists
 		if (i < weapons.size()) {
 			weapon = weapons.get(i);
-			Vector2 curPos = position.add(velocity.mul(dt));
+			Vector2 curPos = position.add(velocity.cpy().mul(dt));
 			Body bulletBody = weapon.fire(bulletID, curPos, velocity, angle);
 			
 			// put bullet body reference into world map

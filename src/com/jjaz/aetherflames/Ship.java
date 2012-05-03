@@ -126,7 +126,6 @@ public class Ship implements AetherFlamesConstants
 		AetherFlamesActivity.mScene.detachChild(energyBar);
 		AetherFlamesActivity.mScene.detachChild(energyBarBackground);
 		AetherFlamesActivity.ships.remove(id);
-		AetherFlamesActivity.mPhysicsWorld.removeShip(id);
 		
 		if(explode)
 		{
@@ -292,10 +291,13 @@ public class Ship implements AetherFlamesConstants
 			if(ep > currentWeapon.COST && weaponIsCool())
 			{
 				int bulletID = AetherFlamesActivity.mPhysicsWorld.nextBulletID();
+				Vector2 position = barrelPosition();
+				Vector2 velocity = body.getLinearVelocity();
+				float angle = body.getAngle();
 				ep -= currentWeapon.COST;
-				Body bulletBody = currentWeapon.fire(bulletID, barrelPosition(), body.getLinearVelocity(), body.getAngle());
+				Body bulletBody = currentWeapon.fire(bulletID, position, velocity, angle);
 				AetherFlamesActivity.mPhysicsWorld.registerBullet(bulletID, currentWeapon.getType(), bulletBody,
-						barrelPosition(), body.getLinearVelocity(), body.getAngle());
+						position, velocity, angle);
 				weaponCooldownOver = System.currentTimeMillis() + currentWeapon.COOLDOWN;
 			}
 		}
