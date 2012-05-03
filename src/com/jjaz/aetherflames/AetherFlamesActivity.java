@@ -67,8 +67,8 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	//private static final String LOCALHOST_IP = "192.168.1.4";
 	private static final String LOCALHOST_IP = "127.0.0.1";
 	
-	protected static final int CAMERA_WIDTH = 960;
-	protected static final int CAMERA_HEIGHT = 540;
+	public static final int CAMERA_WIDTH = 960;
+	public static final int CAMERA_HEIGHT = 540;
 	
 	protected static final float WORLD_WIDTH = 30.0f;
 	protected static final float WORLD_HEIGHT = 16.875f;//WORLD_WIDTH*(CAMERA_HEIGHT/CAMERA_WIDTH);
@@ -426,6 +426,20 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 						}
 					})
 		}
+	}*/
+	
+	/*public void restartGame() {
+		Thread t = new Thread(new Runnable {
+			public void run() {
+
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					
+				}
+				
+			}
+		});
 	}*/
 	
 	@Override

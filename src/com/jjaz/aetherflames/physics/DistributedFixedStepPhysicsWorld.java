@@ -18,6 +18,7 @@ import org.andengine.util.debug.Debug;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
+import com.jjaz.aetherflames.AetherFlamesActivity;
 import com.jjaz.aetherflames.AetherFlamesConstants;
 import com.jjaz.aetherflames.HealthCrate;
 import com.jjaz.aetherflames.ProjectileWeapon;
@@ -199,6 +200,11 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		Vector2 curPos = ship.getPosition();
 		Vector2 predictedPos = position.add(velocity.mul(dt));
 		
+		if (predictedPos.x < 0) predictedPos.x = 0;
+		if (predictedPos.x >= AetherFlamesActivity.CAMERA_WIDTH) predictedPos.x = AetherFlamesActivity.CAMERA_WIDTH-1;
+		if (predictedPos.y < 0) predictedPos.y = 0;
+		if (predictedPos.y >= AetherFlamesActivity.CAMERA_HEIGHT) predictedPos.y = AetherFlamesActivity.CAMERA_HEIGHT-1;
+		
 		// calculate the velocity to take the ship to the predicted position in 'n' frames
 		Vector2 posDiff = predictedPos.sub(curPos);
 		dt = NUM_PREDICTION_FRAMES * framePeriod;
@@ -206,7 +212,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		
 		ship.setAngle(newAngle);
 		//ship.setAngularVelocity(angularVelocity);
-		ship.setPosition(curPos);
+		//ship.setPosition(curPos);
 		ship.setVelocity(newVelocity);
 		
 	}
@@ -399,7 +405,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	 * 
 	 * @return True if successful, false otherwise
 	 */
-	public boolean registerBullet(int bulletID, int type, Body body, Vector2 position, Vector2 velocity, float angle) {
+	public synchronized boolean registerBullet(int bulletID, int type, Body body, Vector2 position, Vector2 velocity, float angle) {
 		
 		// add new bullet to table of bullet body objects
 		this.mBullets.put(bulletID, body);
@@ -428,7 +434,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	 * @param bulletID The bullet ID
 	 * @param shipID The ID of the sender (and affected ship)
 	 */
-	public void registerCollision(int bulletID, int shipID) {
+	public synchronized void registerCollision(int bulletID, int shipID) {
 		// create message
 		CollisionClientMessage message = (CollisionClientMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_COLLISION);
 		message.setCollision(bulletID, shipID);
@@ -452,7 +458,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	 * @param healthPackID The health pack ID
 	 * @param shipID The ID of the sender (and affected ship)
 	 */
-	public void registerHealthPackHit(int healthPackID, int shipID) {
+	public synchronized void registerHealthPackHit(int healthPackID, int shipID) {
 		// create message
 		HitHealthPackClientMessage message = (HitHealthPackClientMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_HIT_HEALTH_PACK);
 		message.setHitHealthPack(healthPackID, shipID);
