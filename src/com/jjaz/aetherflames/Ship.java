@@ -119,18 +119,25 @@ public class Ship implements AetherFlamesConstants
 	
 	void destroyShip(boolean explode)
 	{
-		AetherFlamesActivity.mPhysicsWorld.reportState();
+		if (this.id == AetherFlamesActivity.mPhysicsWorld.getID()){
+			AetherFlamesActivity.mPhysicsWorld.reportState();
+		}
 		body.setUserData("delete");
+	}
+	
+	void cleanup(boolean explode) {
+
 		AetherFlamesActivity.mScene.detachChild(healthBar);
 		AetherFlamesActivity.mScene.detachChild(healthBarBackground);
 		AetherFlamesActivity.mScene.detachChild(energyBar);
 		AetherFlamesActivity.mScene.detachChild(energyBarBackground);
-		AetherFlamesActivity.ships.remove(id);
 		
 		if(explode)
 		{
 			CollisionHandler.drawExplosion(body.getWorldCenter().cpy().mul(AetherFlamesActivity.WORLD_TO_CAMERA), SHIP_SIZE*2*AetherFlamesActivity.CAMERA_TO_WORLD);
 		}
+
+		AetherFlamesActivity.ships.remove(id);
 	}
 	
 	public void damage(int amount)

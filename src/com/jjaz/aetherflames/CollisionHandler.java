@@ -47,7 +47,9 @@ public class CollisionHandler implements ContactListener
 			Ship ship = shipEntry.getValue();
 			if(AetherFlamesActivity.mGameStarted && ship.id == AetherFlamesActivity.myShipColor && ship.isWithinRange(body.getWorldCenter(), blastRadius))
 			{
-				ship.damage(damage);
+				synchronized (AetherFlamesActivity.mPhysicsWorld) {
+					ship.damage(damage);
+				}
 				AetherFlamesActivity.mPhysicsWorld.registerCollision(bulletID, ship.id);
 			}
 		}

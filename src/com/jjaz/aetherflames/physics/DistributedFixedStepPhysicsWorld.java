@@ -96,46 +96,36 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_GAME_STATE, GameStateServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
-					synchronized (DistributedFixedStepPhysicsWorld.this) {
-						final GameStateServerMessage gameStateMessage = (GameStateServerMessage)pServerMessage;
-						DistributedFixedStepPhysicsWorld.this.handleGameStateMessage(gameStateMessage);
-					}
+					final GameStateServerMessage gameStateMessage = (GameStateServerMessage)pServerMessage;
+					DistributedFixedStepPhysicsWorld.this.handleGameStateMessage(gameStateMessage);
 				}
 			});
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_NEW_BULLET, NewBulletServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
-					synchronized (DistributedFixedStepPhysicsWorld.this) {
-						final NewBulletServerMessage newBulletMessage = (NewBulletServerMessage)pServerMessage;
-						DistributedFixedStepPhysicsWorld.this.handleNewBulletMessage(newBulletMessage);
-					}
+					final NewBulletServerMessage newBulletMessage = (NewBulletServerMessage)pServerMessage;
+					DistributedFixedStepPhysicsWorld.this.handleNewBulletMessage(newBulletMessage);
 				}
 			});
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_NEW_HEALTH_PACK, NewHealthPackServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
-					synchronized (DistributedFixedStepPhysicsWorld.this) {
-						final NewHealthPackServerMessage newHealthPackMessage = (NewHealthPackServerMessage)pServerMessage;
-						DistributedFixedStepPhysicsWorld.this.handleNewHealthPackMessage(newHealthPackMessage);
-					}
+					final NewHealthPackServerMessage newHealthPackMessage = (NewHealthPackServerMessage)pServerMessage;
+					DistributedFixedStepPhysicsWorld.this.handleNewHealthPackMessage(newHealthPackMessage);
 				}
 			});
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_COLLISION, CollisionServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
-					synchronized (DistributedFixedStepPhysicsWorld.this) {
-						final CollisionServerMessage collisionMessage = (CollisionServerMessage)pServerMessage;
-						DistributedFixedStepPhysicsWorld.this.handleCollisionMessage(collisionMessage);
-					}
+					final CollisionServerMessage collisionMessage = (CollisionServerMessage)pServerMessage;
+					DistributedFixedStepPhysicsWorld.this.handleCollisionMessage(collisionMessage);
 				}
 			});
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_HIT_HEALTH_PACK, HitHealthPackServerMessage.class, new IServerMessageHandler<SocketConnection>() {
 				@Override
 				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
-					synchronized (DistributedFixedStepPhysicsWorld.this) {
-						final HitHealthPackServerMessage hitHealthPackMessage = (HitHealthPackServerMessage)pServerMessage;
-						DistributedFixedStepPhysicsWorld.this.handleHitHealthPackMessage(hitHealthPackMessage);
-					}
+					final HitHealthPackServerMessage hitHealthPackMessage = (HitHealthPackServerMessage)pServerMessage;
+					DistributedFixedStepPhysicsWorld.this.handleHitHealthPackMessage(hitHealthPackMessage);
 				}
 			});
 			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_CONNECTION_PONG, ConnectionPongServerMessage.class, new IServerMessageHandler<SocketConnection>() {
@@ -256,7 +246,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	 * 
 	 * @param message The message to handle
 	 */
-	public void handleGameStateMessage(GameStateServerMessage message) {
+	public synchronized void handleGameStateMessage(GameStateServerMessage message) {
 		int messageFrame = message.mFrameNum;
 		int currentFrame = this.mFrameNum;
 		
@@ -303,7 +293,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	 * 
 	 * @param message The message to handle
 	 */
-	public void handleNewBulletMessage(NewBulletServerMessage message) {
+	public synchronized void handleNewBulletMessage(NewBulletServerMessage message) {
 		int messageFrame = message.mFrameNum;
 		int currentFrame = this.mFrameNum;
 		
@@ -329,7 +319,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	 * 
 	 * @param message The message to handle
 	 */
-	public void handleNewHealthPackMessage(NewHealthPackServerMessage message) {
+	public synchronized void handleNewHealthPackMessage(NewHealthPackServerMessage message) {
 		int hID = message.mID;
 		float spawnX = message.mPosX;
 		float spawnY = message.mPosY;
@@ -345,7 +335,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	 * 
 	 * @param message The message to handle
 	 */
-	public void handleCollisionMessage(CollisionServerMessage message) {
+	public synchronized void handleCollisionMessage(CollisionServerMessage message) {
 		int bulletID = message.mBulletID;
 		int shipID = message.mShipID;
 		
@@ -367,7 +357,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	 * 
 	 * @param message The message to handle
 	 */
-	public void handleHitHealthPackMessage(HitHealthPackServerMessage message) {
+	public synchronized void handleHitHealthPackMessage(HitHealthPackServerMessage message) {
 		int healthPackID = message.mHealthPackID;
 		int shipID = message.mShipID;
 		
@@ -548,7 +538,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		this.mFrameNum = 0;
 	}
 	
-	public void setShips(Map<Integer, Ship> m) {
+	public synchronized void setShips(Map<Integer, Ship> m) {
 		this.mShips = m;
 		
 		for (int i = 0; i < this.mShips.size(); i++) {
@@ -557,7 +547,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		}
 	}
 	
-	public void setServerConnector(ServerConnector<SocketConnection> connector) {
+	public synchronized void setServerConnector(ServerConnector<SocketConnection> connector) {
 		this.mServerConnector = connector;
 		
 		registerMessageHandlers();

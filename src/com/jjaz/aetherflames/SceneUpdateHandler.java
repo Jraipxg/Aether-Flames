@@ -93,6 +93,10 @@ public class SceneUpdateHandler implements IUpdateHandler
 			Ship ship = shipEntry.getValue();
 			ship.updateStatusBars();
 			ship.regen();
+			
+			if (ship.getHealth() <= 0) {
+				ship.cleanup(true);
+			}
 		}
 		
 		if(AetherFlamesActivity.ships.size() == 1)
