@@ -14,6 +14,8 @@ import com.badlogic.gdx.physics.box2d.Body;
 public class SceneUpdateHandler implements IUpdateHandler
 {
 	protected static boolean purgeGame = false;
+	private int drawCountdown;
+	private boolean drawCountdownFlag;
 	
 	final long timeBetweenExplosionCleanup = 350;//ms
 
@@ -23,6 +25,8 @@ public class SceneUpdateHandler implements IUpdateHandler
 	public SceneUpdateHandler()
 	{
 		timeOfLastHealthDrop = 0;
+		drawCountdown = 0;
+		drawCountdownFlag = false;
 	}
 	
 	boolean deleted(PhysicsConnector pc)
@@ -101,14 +105,42 @@ public class SceneUpdateHandler implements IUpdateHandler
 		
 		if(AetherFlamesActivity.ships.size() == 1)
 		{
-			Ship winner = AetherFlamesActivity.ships.entrySet().iterator().next().getValue();
+			if (drawCountdownFlag == false) {
+				drawCountdown = AetherFlamesActivity.mPhysicsWorld.frameNum(); // get the current frame
+				drawCountdownFlag = true;
+			}
+			/*Ship winner = AetherFlamesActivity.ships.entrySet().iterator().next().getValue();
 			final Text winText = new Text(AetherFlamesActivity.CAMERA_WIDTH/2, AetherFlamesActivity.CAMERA_HEIGHT/2, AetherFlamesActivity.mFont, "Player " + winner.id + " wins!", new TextOptions(HorizontalAlign.CENTER), AetherFlamesActivity.mVertexBufferObjectManager);
 			float textHeight = winText.getHeight();
 			float textWidth = winText.getWidth();
 			winText.setY(AetherFlamesActivity.CAMERA_HEIGHT/2 - textHeight/2);
 			winText.setX(AetherFlamesActivity.CAMERA_WIDTH/2 - textWidth/2);
 			AetherFlamesActivity.mScene.attachChild(winText);
-			AetherFlamesActivity.mGameEngine.stop();
+			AetherFlamesActivity.mGameEngine.stop();*/
+		}
+		
+		if (drawCountdownFlag == true && AetherFlamesActivity.mPhysicsWorld.frameNum() >= drawCountdown + 10) {
+			if (AetherFlamesActivity.ships.size() != 0) { // draw didn't happen this frame
+				Ship winner = AetherFlamesActivity.ships.entrySet().iterator().next().getValue();
+				final Text winText = new Text(AetherFlamesActivity.CAMERA_WIDTH/2, AetherFlamesActivity.CAMERA_HEIGHT/2, AetherFlamesActivity.mFont, "Player " + winner.id + " wins!", new TextOptions(HorizontalAlign.CENTER), AetherFlamesActivity.mVertexBufferObjectManager);
+				float textHeight = winText.getHeight();
+				float textWidth = winText.getWidth();
+				winText.setY(AetherFlamesActivity.CAMERA_HEIGHT/2 - textHeight/2);
+				winText.setX(AetherFlamesActivity.CAMERA_WIDTH/2 - textWidth/2);
+				AetherFlamesActivity.mScene.attachChild(winText);
+				AetherFlamesActivity.mGameEngine.stop();
+			}
+		}
+		
+		if (AetherFlamesActivity.ships.size() == 0) {
+			// draw
+			final Text winText = new Text(AetherFlamesActivity.CAMERA_WIDTH/2, AetherFlamesActivity.CAMERA_HEIGHT/2, AetherFlamesActivity.mFont, "Draw... :(", new TextOptions(HorizontalAlign.CENTER), AetherFlamesActivity.mVertexBufferObjectManager);
+			float textHeight = winText.getHeight();
+			float textWidth = winText.getWidth();
+			winText.setY(AetherFlamesActivity.CAMERA_HEIGHT/2 - textHeight/2);
+			winText.setX(AetherFlamesActivity.CAMERA_WIDTH/2 - textWidth/2);
+			AetherFlamesActivity.mScene.attachChild(winText);
+			AetherFlamesActivity.mGameEngine.stop();			
 		}
 
 		/*long timeSinceLastHealthDrop = System.currentTimeMillis() - timeOfLastHealthDrop;
