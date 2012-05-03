@@ -42,7 +42,7 @@ public class CollisionHandler implements ContactListener
 		CollisionHandler.drawExplosion(body.getWorldCenter().cpy().mul(AetherFlamesActivity.WORLD_TO_CAMERA), blastRadius);
 		
 		//deal damage if the ship is my ship
-		for (Map.Entry<Integer,Ship> shipEntry : AetherFlamesActivity.ships.entrySet()) 
+		for (Map.Entry<Integer,Ship> shipEntry : AetherFlamesActivity.ships.entrySet())
 		{
 			Ship ship = shipEntry.getValue();
 			if(AetherFlamesActivity.mGameStarted && ship.id == AetherFlamesActivity.myShipColor && ship.isWithinRange(body.getWorldCenter(), blastRadius))

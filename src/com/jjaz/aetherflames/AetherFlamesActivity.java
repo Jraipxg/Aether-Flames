@@ -458,6 +458,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		}
 
 		super.onDestroy();
+		android.os.Process.killProcess(android.os.Process.myPid());
 	}
 	
 	@Override
@@ -476,7 +477,26 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		}
 
 		super.onPause();
-		//android.os.Process.killProcess(android.os.Process.myPid());
+		AetherFlamesActivity.quit();
+	}
+	
+	@Override
+	protected void onStop() {
+		if(this.mSocketServer != null) {
+			try {
+				this.mSocketServer.sendBroadcastServerMessage(new ConnectionCloseServerMessage());
+			} catch (final IOException e) {
+				Debug.e(e);
+			}
+			this.mSocketServer.terminate();
+		}
+
+		if(this.mServerConnector != null) {
+			this.mServerConnector.terminate();
+		}
+
+		super.onStop();
+		AetherFlamesActivity.quit();
 	}
 	
 	protected void startGame() {
