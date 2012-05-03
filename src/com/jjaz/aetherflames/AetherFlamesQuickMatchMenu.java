@@ -10,6 +10,7 @@ import org.andengine.entity.scene.menu.item.TextMenuItem;
 import org.andengine.entity.scene.menu.item.decorator.ColorMenuItemDecorator;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.util.color.Color;
+import org.andengine.util.debug.Debug;
 
 import android.opengl.GLES20;
 
@@ -112,7 +113,17 @@ public class AetherFlamesQuickMatchMenu extends MenuScene implements IOnMenuItem
 			AetherFlamesMainMenu.revertMenu();
 			return;
 		}
-		GameServer gs = MatchmakerClient.requestSingleServer(numPlayersDesired);
+		GameServer gs = null;
+		while (gs == null) {
+			gs = MatchmakerClient.requestSingleServer(numPlayersDesired);
+			if (gs != null) { break; }
+			try {
+				Thread.sleep(5000); // wait 5 seconds and try again
+				// TODO: Could go back to the menu after a certain number of tries
+			} catch (InterruptedException e) {
+				Debug.e(e);
+			} 
+		}
 		AetherFlamesActivity.afa.initClient(gs);
 		AetherFlamesMainMenu.revertMenu();
 	}

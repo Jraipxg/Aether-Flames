@@ -27,7 +27,7 @@ import com.jjaz.aetherflames.messages.matchmaker.*;
 public class MatchmakerClient implements AetherFlamesConstants {
 
 	// Networking variables
-	private static final String MATCHMAKER_IP_ADDRESS = "192.168.43.57";
+	private static final String MATCHMAKER_IP_ADDRESS = "206.76.108.25";
 	private static final int MATCHMAKER_PORT = 5555;
 	private static ServerConnector<SocketConnection> mMatchmakerConnector;
 	private static MessagePool<IMessage> mMessagePool;
@@ -115,12 +115,39 @@ public class MatchmakerClient implements AetherFlamesConstants {
 					MatchmakerClient.handleServerListMessage(serverListMessage);
 				}
 			});
+			MatchmakerClient.mMatchmakerConnector.registerServerMessage(FLAG_MESSAGE_MATCHMAKER_NO_SERVER_FOUND, NoServerFoundMatchmakerMessage.class, new IServerMessageHandler<SocketConnection>() {
+				@Override
+				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+					final NoServerFoundMatchmakerMessage noServerFoundMessage = (NoServerFoundMatchmakerMessage)pServerMessage;
+					MatchmakerClient.handleNoServerFoundMessage();
+				}
+			});
 			
 			MatchmakerClient.mMatchmakerConnector.getConnection().start();
 
 		} catch (final Throwable t) {
 			Debug.e(t);
 		}
+	}
+
+	/**
+	 * Only returned if a server or a server list was requested. Let the client know
+	 * that the matchmaker could not find its request.
+	 */
+	protected static void handleNoServerFoundMessage() {
+		server = null;
+		serverList = null;
+		
+		try
+		{
+			talkingToMatchmakerLock.lock();
+			matchmakerCommunicationComplete = true;
+			doneTalkingToMatchmaker.signalAll();
+		}
+		finally
+		{
+			talkingToMatchmakerLock.unlock();
+		}		
 	}
 
 	/**
