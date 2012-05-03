@@ -317,7 +317,9 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	
 	protected static void quit()
 	{
-		AetherFlamesActivity.afa.finish();
+		if (AetherFlamesActivity.afa != null) {
+			AetherFlamesActivity.afa.finish();
+		}
 	}
 	
 	/*

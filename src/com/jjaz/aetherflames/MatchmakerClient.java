@@ -27,7 +27,7 @@ import com.jjaz.aetherflames.messages.matchmaker.*;
 public class MatchmakerClient implements AetherFlamesConstants {
 
 	// Networking variables
-	private static final String MATCHMAKER_IP_ADDRESS = "206.76.108.25";
+	private static final String MATCHMAKER_IP_ADDRESS = "192.168.43.57";
 	private static final int MATCHMAKER_PORT = 5555;
 	private static ServerConnector<SocketConnection> mMatchmakerConnector;
 	private static MessagePool<IMessage> mMessagePool;
@@ -299,7 +299,7 @@ public class MatchmakerClient implements AetherFlamesConstants {
 
 		@Override
 		public void onTerminated(final ServerConnector<SocketConnection> pConnector) {
-			AetherFlamesActivity.afa.toast("Couldn't find matchmaker!");
+			//AetherFlamesActivity.afa.toast("Couldn't find matchmaker!");
 			//AetherFlamesActivity.this.finish();
 		}
 	}
