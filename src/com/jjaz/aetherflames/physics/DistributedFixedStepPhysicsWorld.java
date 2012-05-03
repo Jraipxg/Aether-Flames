@@ -135,6 +135,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 						final ConnectionPongServerMessage message = (ConnectionPongServerMessage)pServerMessage;
 						Date now = new Date();
 						pingTime = now.getTime() - message.getTimestamp();
+						Debug.d("" + pingTime);
 					}
 				}
 			});
@@ -149,6 +150,8 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	 */
 	public void reportState() {		
 		Ship ship = this.mShips.get(this.mID);
+		
+		sendPing();
 		
 		// set the message fields and send the message if the ship is still alive
 		if (ship != null && this.mServerConnector != null) {
@@ -551,7 +554,6 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		this.mServerConnector = connector;
 		
 		registerMessageHandlers();
-		sendPing();
 	}
 	
 }

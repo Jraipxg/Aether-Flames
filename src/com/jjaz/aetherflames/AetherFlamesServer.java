@@ -57,6 +57,7 @@ public class AetherFlamesServer extends
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_CONNECTION_ESTABLISHED, ConnectionEstablishedServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_CONNECTION_REJECTED_GAME_STARTED, ConnectionRejectedGameStartedServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_CONNECTION_CLOSE, ConnectionCloseServerMessage.class);
+		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_CONNECTION_PONG, ConnectionPongServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_NEW_BULLET, NewBulletServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_COLLISION, CollisionServerMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_SERVER_HIT_HEALTH_PACK, HitHealthPackServerMessage.class);
@@ -143,6 +144,17 @@ public class AetherFlamesServer extends
 			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
 				connectedPlayers.remove(pClientConnector); // remove this player (if it exists) from the set of players
 				pClientConnector.terminate();
+			}
+		});
+		
+		clientConnector.registerClientMessage(FLAG_MESSAGE_CLIENT_CONNECTION_PING, ConnectionPingClientMessage.class, new IClientMessageHandler<SocketConnection>() {
+			@Override
+			public void onHandleMessage(final ClientConnector<SocketConnection> pClientConnector, final IClientMessage pClientMessage) throws IOException {
+				ConnectionPongServerMessage message = (ConnectionPongServerMessage)AetherFlamesServer.this.mMessagePool.obtainMessage(FLAG_MESSAGE_SERVER_CONNECTION_PONG); // remove this player (if it exists) from the set of players
+				ConnectionPingClientMessage cMessage = (ConnectionPingClientMessage)pClientMessage;
+				message.setTimestamp(cMessage.getTimestamp());
+				pClientConnector.sendServerMessage(message);
+				AetherFlamesServer.this.mMessagePool.recycleMessage(message);
 			}
 		});
 
