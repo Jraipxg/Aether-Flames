@@ -50,6 +50,10 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	private ServerConnector<SocketConnection> mServerConnector;
 	private MessagePool<IMessage> mMessagePool;
 	
+	// Game logging variables
+	private static ArrayList<Integer> mTotalLatency;        // latency per player
+	private static ArrayList<Integer> mNumUpdatesReceived;  // updates received per player
+	
 	public DistributedFixedStepPhysicsWorld(final int pStepsPerSecond, final Vector2 pGravity, final boolean pAllowSleep, final int pVelocityIterations, final int pPositionIterations) {
 		super(pStepsPerSecond, pGravity, pAllowSleep, pVelocityIterations, pPositionIterations);
 		this.mBullets = new ConcurrentHashMap<Integer, Body>();
@@ -60,6 +64,9 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		this.mSecondsElapsedAccumulator = 0;
 		this.mFrameNum = 0;
 		this.mMessagePool = new MessagePool<IMessage>();
+		
+		this.mTotalLatency = new ArrayList<Integer>();
+		this.mNumUpdatesReceived = new ArrayList<Integer>();
 		
 		initMessagePool();
 	}
@@ -239,6 +246,12 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		
 		int shipID = message.mShipID;
 		Ship ship = this.mShips.get(shipID);
+		
+		// update performance measure information
+		int totalLatency = this.mTotalLatency.get(shipID);
+		int totalUpdates = this.mNumUpdatesReceived.get(shipID);
+		this.mTotalLatency.set(shipID, totalLatency + currentFrame - messageFrame);
+		this.mNumUpdatesReceived.set(shipID, totalUpdates + 1);
 		
 		// update the ship if it still exists and its not the local ship
 		if (ship != null && shipID != this.mID) {
@@ -502,6 +515,11 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	
 	public void setShips(Map<Integer, Ship> m) {
 		this.mShips = m;
+		
+		for (int i = 0; i < this.mShips.size(); i++) {
+			this.mTotalLatency.add(0);
+			this.mNumUpdatesReceived.add(0);
+		}
 	}
 	
 	public void setServerConnector(ServerConnector<SocketConnection> connector) {
