@@ -236,8 +236,14 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		// fire the weapon if it exists
 		if (i < weapons.size()) {
 			weapon = weapons.get(i);
-			Vector2 curPos = position.add(velocity.cpy().mul(dt));
-			Body bulletBody = weapon.fire(bulletID, curPos, velocity, angle);
+			Vector2 predictedPos = position.add(velocity.cpy().mul(dt));
+			if (predictedPos.x < 0) predictedPos.x = 0;
+			if (predictedPos.x >= AetherFlamesActivity.CAMERA_WIDTH) predictedPos.x = AetherFlamesActivity.CAMERA_WIDTH-1;
+			if (predictedPos.y < 0) predictedPos.y = 0;
+			if (predictedPos.y >= AetherFlamesActivity.CAMERA_HEIGHT) predictedPos.y = AetherFlamesActivity.CAMERA_HEIGHT-1;
+			
+			
+			Body bulletBody = weapon.fire(bulletID, predictedPos, velocity, angle);
 			
 			// put bullet body reference into world map
 			this.mBullets.put(bulletID, bulletBody);
