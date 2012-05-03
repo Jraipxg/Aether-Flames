@@ -2,6 +2,7 @@ package com.jjaz.aetherflames.physics;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,10 +23,12 @@ import com.jjaz.aetherflames.HealthCrate;
 import com.jjaz.aetherflames.ProjectileWeapon;
 import com.jjaz.aetherflames.Ship;
 import com.jjaz.aetherflames.messages.client.CollisionClientMessage;
+import com.jjaz.aetherflames.messages.client.ConnectionPingClientMessage;
 import com.jjaz.aetherflames.messages.client.GameStateClientMessage;
 import com.jjaz.aetherflames.messages.client.HitHealthPackClientMessage;
 import com.jjaz.aetherflames.messages.client.NewBulletClientMessage;
 import com.jjaz.aetherflames.messages.server.CollisionServerMessage;
+import com.jjaz.aetherflames.messages.server.ConnectionPongServerMessage;
 import com.jjaz.aetherflames.messages.server.GameStateServerMessage;
 import com.jjaz.aetherflames.messages.server.HitHealthPackServerMessage;
 import com.jjaz.aetherflames.messages.server.NewBulletServerMessage;
@@ -51,8 +54,9 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 	private MessagePool<IMessage> mMessagePool;
 	
 	// Game logging variables
-	private static ArrayList<Integer> mTotalLatency;        // latency per player
+	private static ArrayList<Integer> mTotalLatency;        // latency per player (in frames)
 	private static ArrayList<Integer> mNumUpdatesReceived;  // updates received per player
+	private static long pingTime;
 	
 	public DistributedFixedStepPhysicsWorld(final int pStepsPerSecond, final Vector2 pGravity, final boolean pAllowSleep, final int pVelocityIterations, final int pPositionIterations) {
 		super(pStepsPerSecond, pGravity, pAllowSleep, pVelocityIterations, pPositionIterations);
@@ -79,6 +83,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_NEW_BULLET, NewBulletClientMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_COLLISION, CollisionClientMessage.class);
 		this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_HIT_HEALTH_PACK, HitHealthPackClientMessage.class);
+		this.mMessagePool.registerMessage(FLAG_MESSAGE_CLIENT_CONNECTION_PING, ConnectionPingClientMessage.class);
 	}
 	
 
@@ -129,6 +134,16 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 					synchronized (DistributedFixedStepPhysicsWorld.this) {
 						final HitHealthPackServerMessage hitHealthPackMessage = (HitHealthPackServerMessage)pServerMessage;
 						DistributedFixedStepPhysicsWorld.this.handleHitHealthPackMessage(hitHealthPackMessage);
+					}
+				}
+			});
+			this.mServerConnector.registerServerMessage(FLAG_MESSAGE_SERVER_CONNECTION_PONG, ConnectionPongServerMessage.class, new IServerMessageHandler<SocketConnection>() {
+				@Override
+				public void onHandleMessage(final ServerConnector<SocketConnection> pServerConnector, final IServerMessage pServerMessage) throws IOException {
+					synchronized (DistributedFixedStepPhysicsWorld.this) {
+						final ConnectionPongServerMessage message = (ConnectionPongServerMessage)pServerMessage;
+						Date now = new Date();
+						pingTime = now.getTime() - message.getTimestamp();
 					}
 				}
 			});
@@ -485,6 +500,20 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		}
 	}
 	
+	private void sendPing() {
+		ConnectionPingClientMessage message = (ConnectionPingClientMessage)this.mMessagePool.obtainMessage(FLAG_MESSAGE_CLIENT_CONNECTION_PING);
+		Date now = new Date();
+		message.setTimestamp(now.getTime());
+		try {
+			this.mServerConnector.sendClientMessage(message);
+		} catch (IOException e) {
+			Debug.e(e);
+		} finally {
+			this.mMessagePool.recycleMessage(message);
+		}
+		
+	}
+	
 	/**
 	 * Removes the given ship from the list
 	 * 
@@ -526,6 +555,7 @@ public class DistributedFixedStepPhysicsWorld extends FixedStepPhysicsWorld impl
 		this.mServerConnector = connector;
 		
 		registerMessageHandlers();
+		sendPing();
 	}
 	
 }
