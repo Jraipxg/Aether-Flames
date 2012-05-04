@@ -87,6 +87,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 
 	protected static AetherFlamesActivity afa; //I realize that this is silly.
 	protected static AetherFlamesMainMenu mMenuScene;
+	protected static AetherFlamesGameEndMenu mGameEndMenuScene;
 	protected static Camera mCamera;
 	protected static Scene mScene;
 	protected static Engine mGameEngine;
@@ -250,7 +251,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		AetherFlamesActivity.mFont.load();
 		
 		AetherFlamesActivity.fontTextureSmall = new BitmapTextureAtlas(this.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
-		AetherFlamesActivity.mFontSmall = FontFactory.createFromAsset(this.getFontManager(), fontTextureSmall, this.getAssets(), "lithosproblack.ttf", 36, true, android.graphics.Color.WHITE);
+		AetherFlamesActivity.mFontSmall = FontFactory.createFromAsset(this.getFontManager(), fontTextureSmall, this.getAssets(), "lithosproblack.ttf", 48, true, android.graphics.Color.WHITE);
 		AetherFlamesActivity.mFontSmall.load();
 	}
 
@@ -291,6 +292,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 		
 		ships = new ConcurrentHashMap<Integer,Ship>();
 		
+		mGameEndMenuScene = new AetherFlamesGameEndMenu();
 		this.initBattlefield();
 		this.initWeaponSelection();
 		/*
@@ -606,7 +608,7 @@ public class AetherFlamesActivity extends SimpleBaseGameActivity implements Aeth
 	{
 		if(AetherFlamesActivity.mPhysicsWorld.getPhysicsConnectorManager().size() > 0)
 		{
-			destroyGame();
+			//destroyGame();
 		}
 		
 		if(AetherFlamesActivity.mMenuScene == null)

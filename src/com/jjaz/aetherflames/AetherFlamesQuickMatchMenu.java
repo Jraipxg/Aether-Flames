@@ -9,6 +9,9 @@ import org.andengine.entity.scene.menu.item.IMenuItem;
 import org.andengine.entity.scene.menu.item.TextMenuItem;
 import org.andengine.entity.scene.menu.item.decorator.ColorMenuItemDecorator;
 import org.andengine.entity.sprite.Sprite;
+import org.andengine.entity.text.Text;
+import org.andengine.entity.text.TextOptions;
+import org.andengine.util.HorizontalAlign;
 import org.andengine.util.color.Color;
 import org.andengine.util.debug.Debug;
 
@@ -27,14 +30,13 @@ public class AetherFlamesQuickMatchMenu extends MenuScene implements IOnMenuItem
 	protected static final int MENU_EIGHT_PLAYER = 8;
 
 	protected static final int MENU_BACK = 9;
+	protected static Text winText2;
 	
 	public AetherFlamesQuickMatchMenu()
 	{
 		super(AetherFlamesActivity.mCamera);
-		
-		//this.setPosition(10, AetherFlamesActivity.CAMERA_HEIGHT*0.2f);
 
-		final IMenuItem anyMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_ANY_PLAYER, AetherFlamesActivity.mFontSmall, "Any", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
+		/*final IMenuItem anyMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_ANY_PLAYER, AetherFlamesActivity.mFontSmall, "Any", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
 		anyMenuItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 		anyMenuItem.setAlpha(AetherFlamesMainMenu.MENU_ALPHA);
 		this.addMenuItem(anyMenuItem);
@@ -42,7 +44,7 @@ public class AetherFlamesQuickMatchMenu extends MenuScene implements IOnMenuItem
 		final IMenuItem oneMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_ONE_PLAYER, AetherFlamesActivity.mFontSmall, "One", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
 		oneMenuItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 		oneMenuItem.setAlpha(AetherFlamesMainMenu.MENU_ALPHA);
-		this.addMenuItem(oneMenuItem);
+		this.addMenuItem(oneMenuItem);*/
 
 		final IMenuItem twoMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_TWO_PLAYER, AetherFlamesActivity.mFontSmall, "Two", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
 		twoMenuItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
@@ -59,22 +61,22 @@ public class AetherFlamesQuickMatchMenu extends MenuScene implements IOnMenuItem
 		fourMenuItem.setAlpha(AetherFlamesMainMenu.MENU_ALPHA);
 		this.addMenuItem(fourMenuItem);
 
-		/*final IMenuItem fiveMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_FIVE_PLAYER, AetherFlamesActivity.mFontSmall, "Five Players", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
+		final IMenuItem fiveMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_FIVE_PLAYER, AetherFlamesActivity.mFontSmall, "Five", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
 		fiveMenuItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 		fiveMenuItem.setAlpha(AetherFlamesMainMenu.MENU_ALPHA);
 		this.addMenuItem(fiveMenuItem);
 
-		final IMenuItem sixMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_SIX_PLAYER, AetherFlamesActivity.mFontSmall, "Six Players", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
+		final IMenuItem sixMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_SIX_PLAYER, AetherFlamesActivity.mFontSmall, "Six", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
 		sixMenuItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 		sixMenuItem.setAlpha(AetherFlamesMainMenu.MENU_ALPHA);
 		this.addMenuItem(sixMenuItem);
 
-		final IMenuItem sevenMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_SEVEN_PLAYER, AetherFlamesActivity.mFontSmall, "Seven Players", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
+		/*final IMenuItem sevenMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_SEVEN_PLAYER, AetherFlamesActivity.mFontSmall, "Seven", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
 		sevenMenuItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 		sevenMenuItem.setAlpha(AetherFlamesMainMenu.MENU_ALPHA);
 		this.addMenuItem(sevenMenuItem);
 
-		final IMenuItem eightMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_EIGHT_PLAYER, AetherFlamesActivity.mFontSmall, "Eight Players", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
+		final IMenuItem eightMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_EIGHT_PLAYER, AetherFlamesActivity.mFontSmall, "Eight", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
 		eightMenuItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 		eightMenuItem.setAlpha(AetherFlamesMainMenu.MENU_ALPHA);
 		this.addMenuItem(eightMenuItem);*/
@@ -110,7 +112,7 @@ public class AetherFlamesQuickMatchMenu extends MenuScene implements IOnMenuItem
 			
 			AetherFlamesActivity.createGame(colors, AetherFlamesActivity.myShipColor);
 			AetherFlamesActivity.afa.startGame();
-			AetherFlamesMainMenu.revertMenu();
+			//AetherFlamesMainMenu.revertMenu();
 			return;
 		}
 		GameServer gs = null;
@@ -124,8 +126,9 @@ public class AetherFlamesQuickMatchMenu extends MenuScene implements IOnMenuItem
 				Debug.e(e);
 			} 
 		}
+		this.back();
 		AetherFlamesActivity.afa.initClient(gs);
-		AetherFlamesMainMenu.revertMenu();
+		//AetherFlamesMainMenu.revertMenu();
 	}
 	
 	

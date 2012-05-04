@@ -60,25 +60,31 @@ public class SceneUpdateHandler implements IUpdateHandler
 		AetherFlamesActivity.mScene.detachChild(shape);
 	}
 	
+	void purge(PhysicsConnectorManager pcm)
+	{
+		for (Map.Entry<Integer,Ship> shipEntry : AetherFlamesActivity.ships.entrySet()) 
+		{
+			shipEntry.getValue().destroyShip(false);
+			shipEntry.getValue().cleanup(false);
+		}
+		
+		while(pcm.size() > 0)
+		{
+			destroy(pcm.get(0));
+		}
+
+		purgeGame = false;
+		AetherFlamesActivity.mScene.unregisterUpdateHandler(this);
+		return;
+	}
+
 	@Override
 	public void onUpdate(float pSecondsElapsed)
 	{
 		PhysicsConnectorManager pcm = AetherFlamesActivity.mPhysicsWorld.getPhysicsConnectorManager();
 		if(purgeGame)
 		{
-			for (Map.Entry<Integer,Ship> shipEntry : AetherFlamesActivity.ships.entrySet()) 
-			{
-				shipEntry.getValue().destroyShip(false);
-			}
-			
-			while(pcm.size() > 0)
-			{
-				destroy(pcm.get(0));
-			}
-
-			purgeGame = false;
-			AetherFlamesActivity.mScene.unregisterUpdateHandler(this);
-			return;
+			purge(pcm);
 		}
 		
 		AetherFlamesActivity.mPhysicsWorld.onUpdate(pSecondsElapsed);
@@ -125,10 +131,14 @@ public class SceneUpdateHandler implements IUpdateHandler
 				final Text winText = new Text(AetherFlamesActivity.CAMERA_WIDTH/2, AetherFlamesActivity.CAMERA_HEIGHT/2, AetherFlamesActivity.mFont, "Player " + winner.id + " wins!", new TextOptions(HorizontalAlign.CENTER), AetherFlamesActivity.mVertexBufferObjectManager);
 				float textHeight = winText.getHeight();
 				float textWidth = winText.getWidth();
-				winText.setY(AetherFlamesActivity.CAMERA_HEIGHT/2 - textHeight/2);
+				winText.setY(AetherFlamesActivity.CAMERA_HEIGHT/4 - textHeight/2);
 				winText.setX(AetherFlamesActivity.CAMERA_WIDTH/2 - textWidth/2);
 				AetherFlamesActivity.mScene.attachChild(winText);
-				AetherFlamesActivity.mGameEngine.stop();
+				//AetherFlamesActivity.mGameEngine.stop();
+				AetherFlamesGameEndMenu.winnerID = -1;
+				//purge(pcm);
+				//AetherFlamesActivity.mWeaponSelection.setVisible(false);
+				AetherFlamesActivity.mScene.setChildScene(AetherFlamesActivity.mGameEndMenuScene);
 			}
 		}
 		
@@ -137,10 +147,16 @@ public class SceneUpdateHandler implements IUpdateHandler
 			final Text winText = new Text(AetherFlamesActivity.CAMERA_WIDTH/2, AetherFlamesActivity.CAMERA_HEIGHT/2, AetherFlamesActivity.mFont, "Draw... :(", new TextOptions(HorizontalAlign.CENTER), AetherFlamesActivity.mVertexBufferObjectManager);
 			float textHeight = winText.getHeight();
 			float textWidth = winText.getWidth();
-			winText.setY(AetherFlamesActivity.CAMERA_HEIGHT/2 - textHeight/2);
+			winText.setY(AetherFlamesActivity.CAMERA_HEIGHT/4 - textHeight/2);
 			winText.setX(AetherFlamesActivity.CAMERA_WIDTH/2 - textWidth/2);
 			AetherFlamesActivity.mScene.attachChild(winText);
-			AetherFlamesActivity.mGameEngine.stop();			
+			//AetherFlamesActivity.mGameEngine.stop();		
+			
+
+			AetherFlamesGameEndMenu.winnerID = -1;
+			//purge(pcm);
+			//AetherFlamesActivity.mWeaponSelection.setVisible(false);
+			AetherFlamesActivity.mScene.setChildScene(AetherFlamesActivity.mGameEndMenuScene);
 		}
 
 		/*long timeSinceLastHealthDrop = System.currentTimeMillis() - timeOfLastHealthDrop;

@@ -46,17 +46,16 @@ public class AetherFlamesMainMenu extends MenuScene implements IOnMenuItemClickL
 		AetherFlamesActivity.mScene.attachChild(title);
 		
 		this.setPosition(10, AetherFlamesActivity.CAMERA_HEIGHT*0.16f);
-		
 
 		final IMenuItem quickMatchMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_QUICK_MATCH, AetherFlamesActivity.mFont, "Quick Match", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
 		quickMatchMenuItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 		quickMatchMenuItem.setAlpha(MENU_ALPHA);
 		this.addMenuItem(quickMatchMenuItem);
 
-		final IMenuItem serverListMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_SERVER_LIST, AetherFlamesActivity.mFont, "Servers", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
+		/*final IMenuItem serverListMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_SERVER_LIST, AetherFlamesActivity.mFont, "Servers", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
 		serverListMenuItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 		serverListMenuItem.setAlpha(MENU_ALPHA);
-		this.addMenuItem(serverListMenuItem);
+		this.addMenuItem(serverListMenuItem);*/
 
 		final IMenuItem createServerMenuItem = new ColorMenuItemDecorator(new TextMenuItem(MENU_CREATE_SERVER, AetherFlamesActivity.mFont, "Create Server", AetherFlamesActivity.mVertexBufferObjectManager), AetherFlamesMainMenu.mRolloverColor, AetherFlamesMainMenu.mNormalColor);
 		createServerMenuItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
@@ -182,7 +181,10 @@ public class AetherFlamesMainMenu extends MenuScene implements IOnMenuItemClickL
 	
 	protected static void revertMenu()
 	{
-		AetherFlamesActivity.mMenuScene.clearChildScene();
+		//AetherFlamesActivity.mScene.clearChildScene();
+		AetherFlamesActivity.afa.createMenu();
+		//AetherFlamesActivity.destroyGame();
+		//AetherFlamesActivity.mMenuScene.clearChildScene();
 	}
 	
 	@Override
